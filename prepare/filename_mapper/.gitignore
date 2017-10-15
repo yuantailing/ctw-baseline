@@ -1,0 +1,4 @@
+# secret data file
+list_*.txt
+list_*.json
+*.pkl
