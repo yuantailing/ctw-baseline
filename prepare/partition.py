@@ -10,7 +10,6 @@ import codecs
 import json
 import numpy as np
 import os
-import random
 import settings
 
 from collections import defaultdict
@@ -91,7 +90,7 @@ def main():
     def count_chinese(a):
         return sum([basename2cnt[basename][0] for basename in a])
 
-    random.seed(0)
+    np.random.seed(0)
     train = []
     tests = [[], [], []]
     requires = [100000, 100000, 50000]
@@ -104,7 +103,7 @@ def main():
         ninterval = 5
         if ntest * 2 + ninterval + ntrainval < len(st):
             while 0 < len(st):
-                j = random.randrange(0, 2)
+                j = np.random.randint(0, 2)
                 tests[j] += st[0:ntest]
                 tests[1 - j] += st[ntest:ntest * 2]
                 lastname = st[ntest * 2 - 1].split('.')[0]
@@ -115,7 +114,7 @@ def main():
                 while True:
                     name = st[j].split('.')[0]
                     pos = bisect.bisect(basenames, name) - 1
-                    assert(basenames[pos] == name)
+                    assert basenames[pos] == name
                     if pos - lastpos <= ninterval:
                         j += 1
                     else:
@@ -124,7 +123,7 @@ def main():
                 hi = ntrainval
                 if len(st) < ntrainval * 3 // 2 + ntest * 2 + ninterval * 2:
                     hi = len(st)
-                j = random.randrange(0, 2)
+                j = np.random.randint(0, 2)
                 train += st[j * nval:hi - nval + j * nval]
                 tests[2] += st[0:j * nval] + st[hi - nval + j * nval:hi]
                 lastname = st[hi-1].split('.')[0]
@@ -145,8 +144,8 @@ def main():
     counts = [count_chinese(test) for test in tests]
 
     while (np.array(counts) < np.array(requires)).any():
-        i = random.randrange(0, len(streets))
-        j = random.randrange(0, len(requires))
+        i = np.random.randint(0, len(streets))
+        j = np.random.randint(0, len(requires))
         if counts[j] >= requires[j]:
             continue
         st = streets[i]

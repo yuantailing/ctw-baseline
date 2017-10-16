@@ -10,4 +10,3 @@ def each_char(image_anno):
     for block in image_anno['annotations']:
         for char in block:
             yield char
-
