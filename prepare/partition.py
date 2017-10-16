@@ -171,10 +171,10 @@ def main():
     test_2 = sorted(map(basename2imgid, tests[1]))
     
     def tojsonl(obj):
-        return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, encoding='utf-8', sort_keys=True)
+        return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, sort_keys=True)
 
     def toinfo(anno):
-        keys = anno.keys()
+        keys = list(anno.keys())
         keys.remove('annotations')
         keys.remove('ignore')
         return {k: anno[k] for k in keys}
@@ -183,7 +183,7 @@ def main():
         def g(ds):
             return [toinfo(imgid2anno[imgid]) for imgid in ds]
         r = {'train': g(train), 'val': g(val), 'test_cls': g(test_1), 'test_det': g(test_2)}
-        json.dump(r, f, ensure_ascii=True, allow_nan=False, indent=2, encoding='utf-8', sort_keys=True)
+        json.dump(r, f, ensure_ascii=True, allow_nan=False, indent=2, sort_keys=True)
 
     with open(settings.TRAIN, 'w') as f:
         for imgid in train:
