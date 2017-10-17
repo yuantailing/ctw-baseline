@@ -40,6 +40,23 @@ def get_allowed_filename():
         # print(folder, dict(counts))
     return set(md52old[md5][1] for md5 in allowed_md5)
 
+
+def is_legal_char(imshape):
+    def g(char):
+        x, y, w, h = char['adjusted_bbox']
+        assert w > 0 and h > 0
+        if w <= 0 or h <= 0:
+            return False
+        if x >= imshape[1] or x + w <= 0 or y >= imshape[0] or y + h <= 0:
+            return False
+        if char['is_chinese']:
+            assert 1 == len(char['text'])
+            if 1 != len(char['text']):
+                return False
+        return True
+    return g
+
+
 def main():
     allowed_filename = get_allowed_filename()
     basename2cnt = dict()
@@ -47,6 +64,9 @@ def main():
     with codecs.open(settings.OVERALL_ANNOTATIONS, 'r', 'utf-8') as f:
         for line in f:
             image_anno = json.loads(line.strip())
+            for i, blk in enumerate(image_anno['annotations']):
+                image_anno['annotations'][i] = list(filter(is_legal_char((image_anno['height'], image_anno['width'], 3)), blk))
+            image_anno['annotations'] = list(filter(lambda a: a, image_anno['annotations']))
             image_id = image_anno['image_id']
             direction = image_id[0]
             onew = image_id[1:]
@@ -192,25 +212,28 @@ def main():
         for imgid in val:
             f.write(tojsonl(imgid2anno[imgid]))
             f.write('\n')
-    with open(settings.TEST_CLASSIFICATION_GT, 'w') as f:
-        for imgid in test_1:
-            f.write(tojsonl(imgid2anno[imgid]))
-            f.write('\n')
-    with open(settings.TEST_DETECTION_GT, 'w') as f:
-        for imgid in test_2:
-            f.write(tojsonl(imgid2anno[imgid]))
-            f.write('\n')
-    with open(settings.TEST_CLASSIFICATION, 'w') as f:
+    with open(settings.TEST_CLASSIFICATION, 'w') as f, open(settings.TEST_CLASSIFICATION_GT, 'w') as fgt:
         for imgid in test_1:
             anno = imgid2anno[imgid]
             proposals = []
+            gt = []
             for char in anno_tools.each_char(anno):
-                if char['is_chinese']:
-                    proposals.append({'adjusted_bbox': char['adjusted_bbox'], 'polygon': char['polygon']})
+                if not char['is_chinese']:
+                    continue
+                proposals.append({'adjusted_bbox': char['adjusted_bbox'], 'polygon': char['polygon']})
+                gt.append(char['text'])
             anno.pop('annotations')
             anno.pop('ignore')
             anno['proposals'] = proposals
             f.write(tojsonl(anno))
+            f.write('\n')
+            anno.pop('proposals')
+            anno['ground_truth'] = gt
+            fgt.write(tojsonl(anno))
+            fgt.write('\n')
+    with open(settings.TEST_DETECTION_GT, 'w') as f:
+        for imgid in test_2:
+            f.write(tojsonl(imgid2anno[imgid]))
             f.write('\n')
 
 

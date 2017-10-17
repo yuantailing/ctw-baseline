@@ -32,22 +32,28 @@ def each_file_tuple(root):
                 yield p1, r1, d1
 
 
-def multithreaded(func, args_list, num_thread):
+def multithreaded_tid(func, args_list, num_thread):
     q = queue.Queue()
     for args in args_list:
         q.put(args if isinstance(args, list) or isinstance(args, tuple)
               else (args, ))
 
-    def parallel_work(i):
+    def parallel_work(tid):
         while True:
             try:
                 t = q.get(block=False)
             except queue.Empty as e:
                 return
-            func(*t)
+            func(*t, tid=tid)
     threads = [threading.Thread(target=parallel_work, args=(i, ))
                for i in range(num_thread)]
     for t in threads:
         t.start()
     for t in threads:
         t.join()
+
+
+def multithreaded(func, args_list, num_thread):
+    def foo(*args, **kwargs):
+        func(*args)
+    return multithreaded_tid(foo, args_list, num_thread)
