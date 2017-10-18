@@ -18,8 +18,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import learning
+import six
 import tensorflow as tf
 
+from chineselib import train_step, trainset
 from datasets import dataset_factory
 from deployment import model_deploy
 from nets import nets_factory
@@ -69,6 +72,9 @@ tf.app.flags.DEFINE_integer(
 
 tf.app.flags.DEFINE_integer(
     'task', 0, 'Task id of the replica running the training.')
+
+tf.app.flags.DEFINE_float(
+    'per_process_gpu_memory_fraction', 0.7, '')
 
 ######################
 # Optimization Flags #
@@ -380,6 +386,9 @@ def _get_variables_to_train():
 
 
 def main(_):
+  assert six.PY3
+  assert 1 == FLAGS.num_clones
+
   if not FLAGS.dataset_dir:
     raise ValueError('You must supply the dataset directory with --dataset_dir')
 
@@ -402,8 +411,7 @@ def main(_):
     ######################
     # Select the dataset #
     ######################
-    dataset = dataset_factory.get_dataset(
-        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
+    dataset = trainset
 
     ######################
     # Select the network #
@@ -418,43 +426,25 @@ def main(_):
     # Select the preprocessing function #
     #####################################
     preprocessing_name = FLAGS.preprocessing_name or FLAGS.model_name
-    image_preprocessing_fn = preprocessing_factory.get_preprocessing(
-        preprocessing_name,
-        is_training=True)
+    image_preprocessing_fn = trainset.get_tf_preprocess_image(is_training=True)
 
     ##############################################################
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
     with tf.device(deploy_config.inputs_device()):
-      provider = slim.dataset_data_provider.DatasetDataProvider(
-          dataset,
-          num_readers=FLAGS.num_readers,
-          common_queue_capacity=20 * FLAGS.batch_size,
-          common_queue_min=10 * FLAGS.batch_size)
-      [image, label] = provider.get(['image', 'label'])
-      label -= FLAGS.labels_offset
-
+      assert FLAGS.train_image_size == network_fn.default_image_size
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
-
-      image = image_preprocessing_fn(image, train_image_size, train_image_size)
-
-      images, labels = tf.train.batch(
-          [image, label],
-          batch_size=FLAGS.batch_size,
-          num_threads=FLAGS.num_preprocessing_threads,
-          capacity=5 * FLAGS.batch_size)
-      labels = slim.one_hot_encoding(
-          labels, dataset.num_classes - FLAGS.labels_offset)
-      batch_queue = slim.prefetch_queue.prefetch_queue(
-          [images, labels], capacity=2 * deploy_config.num_clones)
 
     ####################
     # Define the model #
     ####################
     def clone_fn(batch_queue):
       """Allows data parallelism by creating multiple clones of network_fn."""
-      images, labels = batch_queue.dequeue()
-      logits, end_points = network_fn(images)
+      images = tf.placeholder(tf.float32, shape=(FLAGS.batch_size, train_image_size, train_image_size, 3))
+      labels = tf.placeholder(tf.float32, shape=(FLAGS.batch_size, dataset.num_classes))
+      trainset.set_holders(images, labels)
+      logits, end_points = network_fn([image_preprocessing_fn(images[i], train_image_size, train_image_size) for i in range(FLAGS.batch_size)])
+      logits = tf.squeeze(logits)
 
       #############################
       # Specify the loss function #
@@ -471,7 +461,7 @@ def main(_):
     # Gather initial summaries.
     summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
 
-    clones = model_deploy.create_clones(deploy_config, clone_fn, [batch_queue])
+    clones = model_deploy.create_clones(deploy_config, clone_fn, [None])
     first_clone_scope = deploy_config.clone_scope(0)
     # Gather update_ops from the first clone. These contain, for example,
     # the updates for the batch_norm variables created by network_fn.
@@ -481,7 +471,7 @@ def main(_):
     end_points = clones[0].outputs
     for end_point in end_points:
       x = end_points[end_point]
-      summaries.add(tf.summary.histogram('activations/' + end_point, x))
+      # summaries.add(tf.summary.histogram('activations/' + end_point, x))
       summaries.add(tf.summary.scalar('sparsity/' + end_point,
                                       tf.nn.zero_fraction(x)))
 
@@ -490,8 +480,8 @@ def main(_):
       summaries.add(tf.summary.scalar('losses/%s' % loss.op.name, loss))
 
     # Add summaries for variables.
-    for variable in slim.get_model_variables():
-      summaries.add(tf.summary.histogram(variable.op.name, variable))
+    # for variable in slim.get_model_variables():
+    #   summaries.add(tf.summary.histogram(variable.op.name, variable))
 
     #################################
     # Configure the moving averages #
@@ -556,8 +546,13 @@ def main(_):
     ###########################
     # Kicks off the training. #
     ###########################
-    slim.learning.train(
+    session_config = tf.ConfigProto()
+    session_config.gpu_options.per_process_gpu_memory_fraction = FLAGS.per_process_gpu_memory_fraction
+
+    learning.train(
         train_tensor,
+        session_config=session_config,
+        train_step_fn=train_step,
         logdir=FLAGS.train_dir,
         master=FLAGS.master,
         is_chief=(FLAGS.task == 0),
@@ -571,4 +566,5 @@ def main(_):
 
 
 if __name__ == '__main__':
+  trainset.load_data(FLAGS)
   tf.app.run()

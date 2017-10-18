@@ -50,10 +50,11 @@ def main():
         image = misc.imread(os.path.join(settings.TRAINVAL_IMAGE_DIR, anno['file_name']))
         assert image.shape[0] == anno['height'] and image.shape[1] == anno['width'] and image.shape[2] == 3
         for char in anno_tools.each_char(anno):
-            cate_id = char['is_chinese'] and text2cate.get(char['text'])
-            if cate_id:
-                cropped = crop(image, char['adjusted_bbox'])
-                train.append([cropped, cate_id])
+            if not char['is_chinese']:
+                continue
+            cate_id = text2cate.get(char['text'])
+            cropped = crop(image, char['adjusted_bbox'])
+            train.append([cropped, cate_id])
         if i % 100 == 0:
             print('trainval', i, '/', len(lines))
     with open(settings.TRAINVAL_PICKLE, 'wb') as f:

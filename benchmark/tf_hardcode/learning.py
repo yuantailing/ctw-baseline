@@ -268,7 +268,7 @@ from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.summary import summary
 from tensorflow.python.training import optimizer as tf_optimizer
 from tensorflow.python.training import saver as tf_saver
-from tensorflow.python.training import supervisor
+import supervisor
 from tensorflow.python.training import sync_replicas_optimizer
 from tensorflow.python.training import training_util
 
