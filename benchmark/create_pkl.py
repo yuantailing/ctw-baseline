@@ -18,7 +18,13 @@ from pythonapi import anno_tools, common_tools
 
 
 def crop(image, bbox):
+    expand = 0.1
+    maxlong = 64
     x, y, w, h = bbox
+    x -= w * expand
+    w += w * expand * 2
+    y -= h * expand
+    h += h * expand * 2
     xlo = int(math.floor(x))
     ylo = int(math.floor(y))
     xhi = int(math.ceil(x + w))
@@ -31,6 +37,12 @@ def crop(image, bbox):
     cropped = np.zeros((yhi - ylo, xhi - xlo, 3), dtype=np.uint8) + 128
     assert xxlo < xxhi and yylo < yyhi
     cropped[yylo - ylo:yyhi - ylo, xxlo - xlo:xxhi - xlo, :] = image[yylo:yyhi, xxlo:xxhi].copy()
+    if xxhi - xxlo >= yyhi - yylo:
+        if xxhi - xxlo > maxlong:
+            cropped = misc.imresize(cropped, (int(math.ceil(maxlong / (xxhi - xxlo) * (yyhi - yylo))), maxlong))
+    else:
+        if yyhi - yylo > maxlong:
+            cropped = misc.imresize(cropped, (maxlong, int(math.ceil(maxlong / (yyhi - yylo) * (xxhi - xxlo)))))
     return cropped
 
 

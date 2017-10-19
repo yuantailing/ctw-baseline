@@ -28,15 +28,14 @@ cfgs = [
 cfg_common = {
     'dataset_dir': settings.TRAINVAL_PICKLE,
     'dataset_split_name': 'train',
-    'preprocessing_name': 'lenet',
     'num_clones': '1',
     'learning_rate_decay_type': 'exponential',
     'learning_rate': '0.01',
     'learning_rate_decay_factor': '0.1',
-    'num_epochs_per_decay': '4.0',
+    'decay_steps': '40000',
     'max_number_of_steps': '100000',
-    'per_process_gpu_memory_fraction': '0.8',
-    'save_summaries_secs': '60',
+    'per_process_gpu_memory_fraction': '1.0',
+    'save_summaries_secs': '120',
     'save_interval_secs': '1200',
 }
 

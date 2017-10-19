@@ -74,7 +74,7 @@ tf.app.flags.DEFINE_integer(
     'task', 0, 'Task id of the replica running the training.')
 
 tf.app.flags.DEFINE_float(
-    'per_process_gpu_memory_fraction', 0.7, '')
+    'per_process_gpu_memory_fraction', 1., '')
 
 ######################
 # Optimization Flags #
@@ -149,8 +149,8 @@ tf.app.flags.DEFINE_float(
 tf.app.flags.DEFINE_float(
     'learning_rate_decay_factor', 0.94, 'Learning rate decay factor.')
 
-tf.app.flags.DEFINE_float(
-    'num_epochs_per_decay', 2.0,
+tf.app.flags.DEFINE_integer(
+    'decay_steps', 1000,
     'Number of epochs after which learning rate decays.')
 
 tf.app.flags.DEFINE_bool(
@@ -239,8 +239,7 @@ def _configure_learning_rate(num_samples_per_epoch, global_step):
   Raises:
     ValueError: if
   """
-  decay_steps = int(num_samples_per_epoch / FLAGS.batch_size *
-                    FLAGS.num_epochs_per_decay)
+  decay_steps = FLAGS.decay_steps
   if FLAGS.sync_replicas:
     decay_steps /= FLAGS.replicas_to_aggregate
 

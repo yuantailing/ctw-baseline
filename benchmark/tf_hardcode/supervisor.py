@@ -992,9 +992,9 @@ class SVSummaryThread(coordinator.LooperThread):
   def run_loop(self):
     if self._sv.global_step is not None:
       summary_strs, global_step = self._sess.run([self._sv.summary_op,
-                                                  self._sv.global_step], feed_dict=trainset.get_feed_dict())
+                                                  self._sv.global_step], feed_dict=trainset.get_feed_dict(dest='summary'))
     else:
-      summary_strs = self._sess.run(self._sv.summary_op, feed_dict=trainset.get_feed_dict())
+      summary_strs = self._sess.run(self._sv.summary_op, feed_dict=trainset.get_feed_dict(dest='summary'))
       global_step = None
     if self._sv.summary_writer:
       logging.info("Recording summary at step %s.", global_step)
