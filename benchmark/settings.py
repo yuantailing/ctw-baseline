@@ -7,6 +7,7 @@ TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
 NUM_CHAR_CATES         = 1000
+PRODUCTS_ROOT          = 'products'
 CATES                  = 'products/cates.json'
 TRAINVAL_PICKLE        = 'products/trainval.pkl'
 TEST_PICKLE            = 'products/test.pkl'

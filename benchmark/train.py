@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 
 import os
 import settings
-import six
 import subprocess
 import sys
 
@@ -20,41 +19,39 @@ env = {
 cfgs = [
     {
         'model_name': 'alexnet_v2',
-        'train_dir': 'products/train_logs_alexnet_v2',
         'train_image_size': '224',
         'batch_size': '64',
     },
     {
         'model_name': 'inception_v4',
-        'train_dir': 'products/train_logs_inception_v4',
         'train_image_size': '235',
         'batch_size': '64',
     },
     {
         'model_name': 'overfeat',
-        'train_dir': 'products/train_logs_overfeat',
         'train_image_size': '231',
         'batch_size': '64',
     },
     {
         'model_name': 'resnet_v2_50',
-        'train_dir': 'products/train_logs_resnet_v2_50',
         'train_image_size': '224',
         'batch_size': '64',
     },
     {
         'model_name': 'resnet_v2_152',
-        'train_dir': 'products/train_logs_resnet_v2_152',
         'train_image_size': '224',
         'batch_size': '64',
     },
     {
         'model_name': 'vgg_16',
-        'train_dir': 'products/train_logs_vgg_16',
         'train_image_size': '224',
         'batch_size': '64',
     },
 ]
+
+for cfg in cfgs:
+    cfg['train_dir'] = os.path.join(settings.PRODUCTS_ROOT, 'train_logs_{}'.format(cfg['model_name']))
+
 
 cfg_common = {
     'dataset_dir': settings.TRAINVAL_PICKLE,

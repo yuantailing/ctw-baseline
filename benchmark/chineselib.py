@@ -19,11 +19,11 @@ from tensorflow.python.ops import random_ops
 
 class TrainSet:
     def __init__(self):
+        self.num_classes = settings.NUM_CHAR_CATES + 1
         self.prefetch = dict()
 
     def load_data(self, FLAGS):
         self.FLAGS = FLAGS
-        self.num_classes = settings.NUM_CHAR_CATES + 1
         self.num_samples = 0
         self.labels = [[] for i in range(self.num_classes)]
         with open(FLAGS.dataset_dir, 'rb') as f:
@@ -119,7 +119,7 @@ class TrainSet:
     def tf_preprocess_image(image, output_height, output_width, is_training):
         if is_training:
             # with tf.device('/device:CPU:0'):
-            #     image = tf.image.random_hue(image, max_delta=0.05)
+            #     image = tf.image.random_hue(image, max_delta=0.1)
             image = tf.image.random_saturation(image, lower=0.6, upper=1.5)
             image = tf.image.random_brightness(image, max_delta=63)
             image = tf.image.random_contrast(image, lower=0.6, upper=1.5)
@@ -127,8 +127,7 @@ class TrainSet:
             image = tf.expand_dims(image, 0)
             image = tf.image.resize_bilinear(image, [output_height, output_width],
                                              align_corners=False)
-            image = tf.squeeze(image)
-            image.set_shape([None, None, 3])
+            image = tf.squeeze(image, axis=0)
             image = tf.to_float(image)
         return image
 

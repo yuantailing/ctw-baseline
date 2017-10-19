@@ -19,11 +19,17 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import numpy as np
+import six
 import tensorflow as tf
+import time
 
+from chineselib import trainset
 from datasets import dataset_factory
 from nets import nets_factory
 from preprocessing import preprocessing_factory
+from six.moves import cPickle
+from tensorflow.python.training import saver as tf_saver
 
 slim = tf.contrib.slim
 
@@ -83,18 +89,22 @@ FLAGS = tf.app.flags.FLAGS
 
 
 def main(_):
+  assert six.PY3
+
   if not FLAGS.dataset_dir:
     raise ValueError('You must supply the dataset directory with --dataset_dir')
 
+  with open(FLAGS.dataset_dir, 'rb') as f:
+    test_data = cPickle.load(f)
+
   tf.logging.set_verbosity(tf.logging.INFO)
   with tf.Graph().as_default():
-    tf_global_step = slim.get_or_create_global_step()
+    tf_global_step = tf.train.get_or_create_global_step()
 
     ######################
     # Select the dataset #
     ######################
-    dataset = dataset_factory.get_dataset(
-        FLAGS.dataset_name, FLAGS.dataset_split_name, FLAGS.dataset_dir)
+    dataset = trainset
 
     ####################
     # Select the model #
@@ -104,39 +114,25 @@ def main(_):
         num_classes=(dataset.num_classes - FLAGS.labels_offset),
         is_training=False)
 
-    ##############################################################
-    # Create a dataset provider that loads data from the dataset #
-    ##############################################################
-    provider = slim.dataset_data_provider.DatasetDataProvider(
-        dataset,
-        shuffle=False,
-        common_queue_capacity=2 * FLAGS.batch_size,
-        common_queue_min=FLAGS.batch_size)
-    [image, label] = provider.get(['image', 'label'])
-    label -= FLAGS.labels_offset
-
     #####################################
     # Select the preprocessing function #
     #####################################
     preprocessing_name = FLAGS.preprocessing_name or FLAGS.model_name
-    image_preprocessing_fn = preprocessing_factory.get_preprocessing(
-        preprocessing_name,
+    image_preprocessing_fn = trainset.get_tf_preprocess_image(
         is_training=False)
 
+    assert FLAGS.eval_image_size == network_fn.default_image_size
     eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
 
-    image = image_preprocessing_fn(image, eval_image_size, eval_image_size)
-
-    images, labels = tf.train.batch(
-        [image, label],
-        batch_size=FLAGS.batch_size,
-        num_threads=FLAGS.num_preprocessing_threads,
-        capacity=5 * FLAGS.batch_size)
+    images_holder = [tf.placeholder(tf.uint8, shape=(None, None, 3)) for i in range(FLAGS.batch_size)]
+    # images = map(lambda holder: image_preprocessing_fn(holder, eval_image_size, eval_image_size), images_holder)
+    images = [image_preprocessing_fn(images_holder[i], eval_image_size, eval_image_size) for i in range(FLAGS.batch_size)]
 
     ####################
     # Define the model #
     ####################
     logits, _ = network_fn(images)
+    eval_ops = logits
 
     if FLAGS.moving_average_decay:
       variable_averages = tf.train.ExponentialMovingAverage(
@@ -147,44 +143,36 @@ def main(_):
     else:
       variables_to_restore = slim.get_variables_to_restore()
 
-    predictions = tf.argmax(logits, 1)
-    labels = tf.squeeze(labels)
-
-    # Define the metrics:
-    names_to_values, names_to_updates = slim.metrics.aggregate_metric_map({
-        'Accuracy': slim.metrics.streaming_accuracy(predictions, labels),
-        'Recall_5': slim.metrics.streaming_recall_at_k(
-            logits, labels, 5),
-    })
-
-    # Print the summaries to screen.
-    for name, value in names_to_values.items():
-      summary_name = 'eval/%s' % name
-      op = tf.summary.scalar(summary_name, value, collections=[])
-      op = tf.Print(op, [value], summary_name)
-      tf.add_to_collection(tf.GraphKeys.SUMMARIES, op)
-
-    # TODO(sguada) use num_epochs=1
-    if FLAGS.max_num_batches:
-      num_batches = FLAGS.max_num_batches
-    else:
-      # This ensures that we make a single pass over all of the data.
-      num_batches = math.ceil(dataset.num_samples / float(FLAGS.batch_size))
-
     if tf.gfile.IsDirectory(FLAGS.checkpoint_path):
       checkpoint_path = tf.train.latest_checkpoint(FLAGS.checkpoint_path)
     else:
       checkpoint_path = FLAGS.checkpoint_path
 
     tf.logging.info('Evaluating %s' % checkpoint_path)
+    with tf.Session() as session:
+        start_time = time.time()
+        saver = tf_saver.Saver(variables_to_restore)
+        saver.restore(session, checkpoint_path)
+        results = []
+        lo = 0
+        while lo != len(test_data):
+            hi = min(len(test_data), lo + FLAGS.batch_size)
+            feed_data = test_data[lo:hi] + [(np.zeros((3, 3, 3), dtype=np.uint8), None)] * (lo + FLAGS.batch_size - hi)
+            logits = session.run(eval_ops, feed_dict={images_holder[i]: feed_data[i][0] for i in range(FLAGS.batch_size)})
+            results.append(logits[:hi - lo])
+            lo = hi
+            tf.logging.info('evaluated: %d / %d' % (lo, len(test_data)))
+        end_time = time.time()
+        with open(FLAGS.eval_dir, 'wb') as f:
+            cPickle.dump({
+                'checkpoint_path': checkpoint_path,
+                'logits': np.concatenate(results, axis=0),
+                'start_time': start_time,
+                'end_time': end_time,
+            }, f)
 
-    slim.evaluation.evaluate_once(
-        master=FLAGS.master,
-        checkpoint_path=checkpoint_path,
-        logdir=FLAGS.eval_dir,
-        num_evals=num_batches,
-        eval_op=list(names_to_updates.values()),
-        variables_to_restore=variables_to_restore)
+    tf.logging.info('Finished evaluation at ' + time.strftime('%Y-%m-%d-%H:%M:%S',
+                                                           time.gmtime()))
 
 
 if __name__ == '__main__':
