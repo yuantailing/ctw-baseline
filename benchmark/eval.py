@@ -23,7 +23,6 @@ cfgs = [{
     'eval_image_size': cfg['train_image_size'],
 } for cfg in train.cfgs]
 
-
 cfg_common = {
     'dataset_dir': settings.TEST_PICKLE,
     'dataset_split_name': 'test',
@@ -32,12 +31,7 @@ cfg_common = {
 
 
 def main(model_name):
-    cfg = list(filter(lambda o: o['model_name'] == model_name, train.cfgs))[0]
-    cfg = {
-        'model_name': cfg['model_name'],
-        'checkpoint_path': cfg['train_dir'],
-        'eval_image_size': cfg['train_image_size'],
-    }
+    cfg = list(filter(lambda o: o['model_name'] == model_name, cfgs))[0]
     cfg.update(cfg_common)
 
     args = ['python3', 'slim/eval_image_classifier.py', '--alsologtostderr']

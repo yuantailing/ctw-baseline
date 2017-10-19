@@ -52,7 +52,6 @@ cfgs = [
 for cfg in cfgs:
     cfg['train_dir'] = os.path.join(settings.PRODUCTS_ROOT, 'train_logs_{}'.format(cfg['model_name']))
 
-
 cfg_common = {
     'dataset_dir': settings.TRAINVAL_PICKLE,
     'dataset_split_name': 'train',
