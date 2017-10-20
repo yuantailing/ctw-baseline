@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+		<meta charset="UTF-8">
+		<style>
+body { font-family: SimSun; }
+td img { height: 32px; }
+td.correct { background-color: #dfd; }
+td.error { background-color: #fdd; }
+	</style>
+	</head>
+	<body>
+		<h1>Predictions</h1>
+		<table>
+			<tr>
+				<th align="center">image</th>
+				<th align="center">text</th>
+			{% for model_name in models %}
+				<th align="center" colspan="2">{{ model_name }}</th>
+			{% endfor %}
+			</tr>
+		{% for row in rows %}
+			<tr>
+				<td align="center"><img src="data:image/png;base64,{{ row.png_base64 }}"></td>
+				<td align="center">{{ row.ground_truth }}</td>
+			{% for model in row.models %}
+			{% if model.text == row.ground_truth %}
+				<td class="correct" align="center">{{ model.text }}</td><td class="correct" align="right">{{ model.prob }}</td>
+			{% else %}
+				<td align="center">{{ model.text }}</td><td align="right">{{ model.prob }}</td>
+			{% endif %}
+			{% endfor %}
+			</tr>
+		{% endfor %}
+		</table>
+	</body>
+</html>

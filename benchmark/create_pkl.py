@@ -37,12 +37,12 @@ def crop(image, bbox):
     cropped = np.zeros((yhi - ylo, xhi - xlo, 3), dtype=np.uint8) + 128
     assert xxlo < xxhi and yylo < yyhi
     cropped[yylo - ylo:yyhi - ylo, xxlo - xlo:xxhi - xlo, :] = image[yylo:yyhi, xxlo:xxhi].copy()
-    if xxhi - xxlo >= yyhi - yylo:
-        if xxhi - xxlo > maxlong:
-            cropped = misc.imresize(cropped, (int(math.ceil(maxlong / (xxhi - xxlo) * (yyhi - yylo))), maxlong))
+    if xhi - xlo >= yhi - ylo:
+        if xhi - xlo > maxlong:
+            cropped = misc.imresize(cropped, (int(math.ceil(maxlong / (xhi - xlo) * (yhi - ylo))), maxlong))
     else:
-        if yyhi - yylo > maxlong:
-            cropped = misc.imresize(cropped, (maxlong, int(math.ceil(maxlong / (yyhi - yylo) * (xxhi - xxlo)))))
+        if yhi - ylo > maxlong:
+            cropped = misc.imresize(cropped, (maxlong, int(math.ceil(maxlong / (yhi - ylo) * (xhi - xlo)))))
     return cropped
 
 
@@ -60,7 +60,7 @@ def main():
     for i, line in enumerate(lines):
         anno = json.loads(line.strip())
         image = misc.imread(os.path.join(settings.TRAINVAL_IMAGE_DIR, anno['file_name']))
-        assert image.shape[0] == anno['height'] and image.shape[1] == anno['width'] and image.shape[2] == 3
+        assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno_tools.each_char(anno):
             if not char['is_chinese']:
                 continue
@@ -79,7 +79,7 @@ def main():
     for i, line in enumerate(lines):
         anno = json.loads(line.strip())
         image = misc.imread(os.path.join(settings.TEST_IMAGE_DIR, anno['file_name']))
-        assert image.shape[0] == anno['height'] and image.shape[1] == anno['width'] and image.shape[2] == 3
+        assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno['proposals']:
             cropped = crop(image, char['adjusted_bbox'])
             test.append([cropped, None])
