@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import copy
 import os
 import settings
 import subprocess
@@ -16,6 +17,12 @@ env = {
     'CUDA_VISIBLE_DEVICES': '0',
 }
 
+cfg_common = {
+    'dataset_dir': settings.TEST_PICKLE,
+    'dataset_split_name': 'test',
+    'batch_size': 1024,
+}
+
 cfgs = [{
     'model_name': cfg['model_name'],
     'eval_dir': os.path.join(settings.PRODUCTS_ROOT, 'eval_{}.pkl'.format(cfg['model_name'])),
@@ -23,16 +30,11 @@ cfgs = [{
     'eval_image_size': cfg['train_image_size'],
 } for cfg in train.cfgs]
 
-cfg_common = {
-    'dataset_dir': settings.TEST_PICKLE,
-    'dataset_split_name': 'test',
-    'batch_size': 1024,
-}
-
 
 def main(model_name):
-    cfg = list(filter(lambda o: o['model_name'] == model_name, cfgs))[0]
-    cfg.update(cfg_common)
+    cfg = copy.deepcopy(cfg_common)
+    cfg_model = list(filter(lambda o: o['model_name'] == model_name, cfgs))[0]
+    cfg.update(cfg_model)
 
     args = ['python3', 'slim/eval_image_classifier.py', '--alsologtostderr']
     for k, v, in cfg.items():

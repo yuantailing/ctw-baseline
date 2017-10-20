@@ -14,7 +14,7 @@ import settings
 
 from collections import defaultdict
 from filename_mapper import mapper
-from pythonapi import anno_tools
+from pythonapi import anno_tools, common_tools
 
 
 def get_allowed_filename():
@@ -188,9 +188,6 @@ def main():
     val = sorted(map(basename2imgid, tests[2]))
     test_1 = sorted(map(basename2imgid, tests[0]))
     test_2 = sorted(map(basename2imgid, tests[1]))
-    
-    def tojsonl(obj):
-        return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, sort_keys=True)
 
     def toinfo(anno):
         keys = list(anno.keys())
@@ -206,11 +203,11 @@ def main():
 
     with open(settings.TRAIN, 'w') as f:
         for imgid in train:
-            f.write(tojsonl(imgid2anno[imgid]))
+            f.write(common_tools.to_jsonl(imgid2anno[imgid]))
             f.write('\n')
     with open(settings.VAL, 'w') as f:
         for imgid in val:
-            f.write(tojsonl(imgid2anno[imgid]))
+            f.write(common_tools.to_jsonl(imgid2anno[imgid]))
             f.write('\n')
     with open(settings.TEST_CLASSIFICATION, 'w') as f, open(settings.TEST_CLASSIFICATION_GT, 'w') as fgt:
         for imgid in test_1:
@@ -225,15 +222,15 @@ def main():
             anno.pop('annotations')
             anno.pop('ignore')
             anno['proposals'] = proposals
-            f.write(tojsonl(anno))
+            f.write(common_tools.to_jsonl(anno))
             f.write('\n')
             anno.pop('proposals')
             anno['ground_truth'] = gt
-            fgt.write(tojsonl(anno))
+            fgt.write(common_tools.to_jsonl(anno))
             fgt.write('\n')
     with open(settings.TEST_DETECTION_GT, 'w') as f:
         for imgid in test_2:
-            f.write(tojsonl(imgid2anno[imgid]))
+            f.write(common_tools.to_jsonl(imgid2anno[imgid]))
             f.write('\n')
 
 

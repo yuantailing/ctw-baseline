@@ -165,6 +165,7 @@ def main(_):
         end_time = time.time()
         with open(FLAGS.eval_dir, 'wb') as f:
             cPickle.dump({
+                'model_name': FLAGS.model_name,
                 'checkpoint_path': checkpoint_path,
                 'logits': np.concatenate(results, axis=0),
                 'start_time': start_time,

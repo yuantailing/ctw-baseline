@@ -5,10 +5,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
 import os
 import threading
 
 from six.moves import queue
+
+
+def to_jsonl(obj):
+    return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, sort_keys=True)
 
 
 def mkdirs(path):

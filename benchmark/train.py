@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import copy
 import os
 import settings
 import subprocess
@@ -14,6 +15,20 @@ import sys
 env = {
     'PYTHONPATH': '.:tf_hardcode:slim',
     'CUDA_VISIBLE_DEVICES': '0',
+}
+
+cfg_common = {
+    'dataset_dir': settings.TRAINVAL_PICKLE,
+    'dataset_split_name': 'train',
+    'num_clones': '1',
+    'learning_rate_decay_type': 'exponential',
+    'learning_rate': '0.01',
+    'learning_rate_decay_factor': '0.1',
+    'decay_steps': '40000',
+    'max_number_of_steps': '100000',
+    'per_process_gpu_memory_fraction': '1.0',
+    'save_summaries_secs': '120',
+    'save_interval_secs': '1200',
 }
 
 cfgs = [
@@ -52,24 +67,11 @@ cfgs = [
 for cfg in cfgs:
     cfg['train_dir'] = os.path.join(settings.PRODUCTS_ROOT, 'train_logs_{}'.format(cfg['model_name']))
 
-cfg_common = {
-    'dataset_dir': settings.TRAINVAL_PICKLE,
-    'dataset_split_name': 'train',
-    'num_clones': '1',
-    'learning_rate_decay_type': 'exponential',
-    'learning_rate': '0.01',
-    'learning_rate_decay_factor': '0.1',
-    'decay_steps': '40000',
-    'max_number_of_steps': '100000',
-    'per_process_gpu_memory_fraction': '1.0',
-    'save_summaries_secs': '120',
-    'save_interval_secs': '1200',
-}
-
 
 def main(model_name):
-    cfg = list(filter(lambda o: o['model_name'] == model_name, cfgs))[0]
-    cfg.update(cfg_common)
+    cfg = copy.deepcopy(cfg_common)
+    cfg_model = list(filter(lambda o: o['model_name'] == model_name, cfgs))[0]
+    cfg.update(cfg_model)
 
     args = ['python3', 'slim/train_image_classifier.py']
     for k, v, in cfg.items():
