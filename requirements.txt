@@ -1,0 +1,5 @@
+Jinja2
+opencv-python
+scipy
+six
+tensorflow-gpu>=1.4.0rc0

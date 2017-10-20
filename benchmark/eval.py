@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import copy
 import os
+import predict
 import settings
 import subprocess
 import sys
@@ -55,3 +56,4 @@ def main(model_name):
 
 if __name__ == '__main__':
     main(sys.argv[1])
+    predict.main(sys.argv[1], 5)

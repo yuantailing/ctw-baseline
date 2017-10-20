@@ -23,6 +23,10 @@ cfgs = [
         'model_name': 'alexnet_v2',
         'display_name': 'AlexNet',
     },
+    {
+        'model_name': 'overfeat',
+        'display_name': 'OverFeat',
+    },
 ]
 
 for cfg in cfgs:
