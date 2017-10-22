@@ -48,9 +48,6 @@ def crop(image, bbox):
 
 def main():
     assert six.PY3
-    with open(settings.CATES) as f:
-        cates = json.load(f)
-    text2cate = {c['text']: c['cate_id'] for c in cates}
 
     with open(settings.TRAIN) as f:
         lines = f.read().splitlines()
@@ -58,17 +55,16 @@ def main():
         lines += f.read().splitlines()
     train = []
     for i, line in enumerate(lines):
+        if i % 100 == 0:
+            print('trainval', i, '/', len(lines))
         anno = json.loads(line.strip())
         image = misc.imread(os.path.join(settings.TRAINVAL_IMAGE_DIR, anno['file_name']))
         assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno_tools.each_char(anno):
             if not char['is_chinese']:
                 continue
-            cate_id = text2cate.get(char['text'])
             cropped = crop(image, char['adjusted_bbox'])
-            train.append([cropped, cate_id])
-        if i % 100 == 0:
-            print('trainval', i, '/', len(lines))
+            train.append([cropped, char['text']])
     with open(settings.TRAINVAL_PICKLE, 'wb') as f:
         cPickle.dump(train, f)
     train = [] # release memory
@@ -77,14 +73,14 @@ def main():
         lines = f.read().splitlines()
     test = []
     for i, line in enumerate(lines):
+        if i % 100 == 0:
+            print('trainval', i, '/', len(lines))
         anno = json.loads(line.strip())
         image = misc.imread(os.path.join(settings.TEST_IMAGE_DIR, anno['file_name']))
         assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno['proposals']:
             cropped = crop(image, char['adjusted_bbox'])
             test.append([cropped, None])
-        if i % 100 == 0:
-            print('test', i, '/', len(lines))
     with open(settings.TEST_PICKLE, 'wb') as f:
         cPickle.dump(test, f)
 

@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import cv2
+import json
 import numpy as np
 import random
 import settings
@@ -24,14 +25,19 @@ class TrainSet:
 
     def load_data(self, FLAGS):
         self.FLAGS = FLAGS
+        with open(settings.CATES) as f:
+            cates = json.load(f)
+        text2cate = {c['text']: c['cate_id'] for c in cates}
         self.num_samples = 0
         self.labels = [[] for i in range(self.num_classes)]
         with open(FLAGS.dataset_dir, 'rb') as f:
             all = cPickle.load(f)
-        for image, label in all:
-            if label is None:
+        for image, text in all:
+            label = text2cate.get(text)
+            assert label is not None
+            if label is None or label >= settings.NUM_CHAR_CATES:
                 self.labels[settings.NUM_CHAR_CATES].append(image)
-            else:
+            else: # label < settings.NUM_CHAR_CATES:
                 self.labels[label].append(image)
             self.num_samples += 1
         for label in self.labels:

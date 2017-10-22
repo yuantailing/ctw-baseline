@@ -87,6 +87,7 @@ def main(model_name):
     print(*args)
     p = subprocess.Popen(args, env=new_env, shell=False)
     p.wait()
+    assert 0 == p.returncode
 
 
 if __name__ == '__main__':

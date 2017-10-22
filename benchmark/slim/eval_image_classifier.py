@@ -121,7 +121,8 @@ def main(_):
     image_preprocessing_fn = trainset.get_tf_preprocess_image(
         is_training=False)
 
-    assert FLAGS.eval_image_size == network_fn.default_image_size
+    assert FLAGS.eval_image_size is not None
+    # assert FLAGS.eval_image_size == network_fn.default_image_size
     eval_image_size = FLAGS.eval_image_size or network_fn.default_image_size
 
     images_holder = [tf.placeholder(tf.uint8, shape=(None, None, 3)) for i in range(FLAGS.batch_size)]

@@ -21,7 +21,7 @@ env = {
 cfg_common = {
     'dataset_dir': settings.TEST_PICKLE,
     'dataset_split_name': 'test',
-    'batch_size': 1024,
+    'batch_size': 256,
 }
 
 cfgs = [{
@@ -52,6 +52,7 @@ def main(model_name):
     print(*args)
     p = subprocess.Popen(args, env=new_env, shell=False)
     p.wait()
+    assert 0 == p.returncode
 
 
 if __name__ == '__main__':

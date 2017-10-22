@@ -34,6 +34,7 @@ def main(model_name, max_prediction):
         if k != 'logits':
             print(k, data[k])
     logits = data['logits']
+    assert settings.NUM_CHAR_CATES + 1 == logits.shape[1]
     logits = logits[:, :settings.NUM_CHAR_CATES]
     explogits = np.exp(np.minimum(logits, 70))
     expsums = np.sum(explogits, axis=1)

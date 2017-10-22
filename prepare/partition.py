@@ -72,7 +72,7 @@ def main():
             onew = image_id[1:]
             oold = mapper.new2old[onew]
             complete_basename = '{}.{}'.format(oold, direction)
-            if complete_basename not in allowed_filename:
+            if image_id[1:3] != '04' and complete_basename not in allowed_filename:
                 continue
             is_chinese = 0
             is_not_chinese = 0

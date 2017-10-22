@@ -27,6 +27,10 @@ cfgs = [
         'model_name': 'overfeat',
         'display_name': 'OverFeat',
     },
+    {
+        'model_name': 'inception_v4',
+        'display_name': 'Inception',
+    },
 ]
 
 for cfg in cfgs:
@@ -142,4 +146,4 @@ def main(models, n):
 
 
 if __name__ == '__main__':
-    main(cfgs, 100)
+    main(cfgs, 200)

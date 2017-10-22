@@ -1,4 +1,4 @@
-OVERALL_ANNOTATIONS    = '../data/annotations/zh.v4.jsonl'
+OVERALL_ANNOTATIONS    = '../data/annotations/zh.v5.jsonl'
 
 DATA_LIST              = '../data/annotations/info.json'
 TRAIN                  = '../data/annotations/train.jsonl'
@@ -9,4 +9,4 @@ TEST_CLASSIFICATION    = '../data/annotations/test_cls.jsonl'
 
 TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
-IMAGE_SOURCES_ROOTS    = ['/home/yuan/mnt/tencent/tiger/char_renamed']
+IMAGE_SOURCES_ROOTS    = ['../data/all_images', ]

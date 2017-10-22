@@ -431,7 +431,8 @@ def main(_):
     # Create a dataset provider that loads data from the dataset #
     ##############################################################
     with tf.device(deploy_config.inputs_device()):
-      assert FLAGS.train_image_size == network_fn.default_image_size
+      assert FLAGS.train_image_size is not None
+      # assert FLAGS.train_image_size == network_fn.default_image_size
       train_image_size = FLAGS.train_image_size or network_fn.default_image_size
 
     ####################
