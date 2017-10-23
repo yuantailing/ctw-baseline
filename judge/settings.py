@@ -9,5 +9,14 @@ TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
 PRODUCTS_ROOT          = 'products'
-TEST_CROPPED_PICKLE    = 'products/test_cropped.pkl'
+TEST_CLS_CROPPED       = 'products/test_cls_cropped.pkl'
 PREDICTIONS_HTML       = 'products/predictions_compare.html'
+
+RECALL_N               = (1, 5)
+PROPERTIES             = ['covered', 'bgcomplex', 'distorted', 'raised', 'wordart', 'handwritten']
+SIZE_RANGES            = {
+    'small(<16)': (0., 16.),
+    'medium': (16., 32.),
+    'large(>=32)': (32., float('inf')),
+    '__all__': (0., float('inf')),
+}

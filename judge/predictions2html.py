@@ -86,19 +86,19 @@ def create_pkl():
             test.append([cropped, gt])
         if i % 100 == 0:
             print('test', i, '/', len(lines))
-    with open(settings.TEST_CROPPED_PICKLE, 'wb') as f:
+    with open(settings.TEST_CLS_CROPPED, 'wb') as f:
         cPickle.dump(test, f)
 
 
 def main(models, n):
     assert six.PY3
 
-    if not os.path.exists(settings.TEST_CROPPED_PICKLE) or \
-            os.stat(settings.TEST_CROPPED_PICKLE).st_mtime < os.stat(settings.TEST_CLASSIFICATION).st_mtime:
-        print('creating', settings.TEST_CROPPED_PICKLE)
+    if not os.path.exists(settings.TEST_CLS_CROPPED) or \
+            os.stat(settings.TEST_CLS_CROPPED).st_mtime < os.stat(settings.TEST_CLASSIFICATION).st_mtime:
+        print('creating', settings.TEST_CLS_CROPPED)
         create_pkl()
 
-    with open(settings.TEST_CROPPED_PICKLE, 'rb') as f:
+    with open(settings.TEST_CLS_CROPPED, 'rb') as f:
         gts = cPickle.load(f)
     preds = []
     for model in models:
