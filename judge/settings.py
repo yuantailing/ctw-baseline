@@ -13,10 +13,17 @@ TEST_CLS_CROPPED       = 'products/test_cls_cropped.pkl'
 PREDICTIONS_HTML       = 'products/predictions_compare.html'
 
 RECALL_N               = (1, 5)
-PROPERTIES             = ['covered', 'bgcomplex', 'distorted', 'raised', 'wordart', 'handwritten']
-SIZE_RANGES            = {
-    'small(<16)': (0., 16.),
-    'medium': (16., 32.),
-    'large(>=32)': (32., float('inf')),
-    '__all__': (0., float('inf')),
-}
+SIZE_RANGES            = [
+    ('__all__', (0., float('inf'))),
+    ('small(<16)', (0., 16.)),
+    ('medium', (16., 32.)),
+    ('large(>=32)', (32., float('inf'))),
+]
+PROPERTIES             = [
+    'covered',
+    'bgcomplex',
+    'distorted',
+    'raised',
+    'wordart',
+    'handwritten',
+]

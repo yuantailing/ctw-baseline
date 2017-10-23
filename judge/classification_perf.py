@@ -8,14 +8,16 @@ from __future__ import unicode_literals
 import json
 import predictions2html
 import settings
+import sys
 
 from pythonapi import eval_tools
 
+
 def recall_print(recall, name):
-    print(name,
-          '{:.2f}%'.format(recall['recalls'][1] / recall['n'] * 100),
-          '{:.2f}%'.format(recall['recalls'][5] / recall['n'] * 100),
-          'n={}'.format(recall['n']))
+    print(name, end=' ')
+    for n, rc_n in sorted(recall['recalls'].items()):
+        print('{:.2f}%'.format(rc_n / recall['n'] * 100), end=' ')
+    print('n={}'.format(recall['n']))
 
 
 def main(model_name):
@@ -24,11 +26,11 @@ def main(model_name):
         gt = f.read()
     with open(model['predictions_file_path']) as f:
         pr = f.read()
-    report = eval_tools.classification_precision(gt, pr,
+    report = eval_tools.classification_recall(gt, pr,
         settings.RECALL_N, settings.PROPERTIES, settings.SIZE_RANGES)
     assert 0 == report['error'], report['msg']
     for prop in ['__all__'] + settings.PROPERTIES + ['~{}'.format(prop) for prop in settings.PROPERTIES]:
-        for szname in sorted(settings.SIZE_RANGES.keys()):
+        for szname, _ in sorted(settings.SIZE_RANGES):
             name = '{:12s} & {:12s}'.format(szname, prop)
             recall = report['statistics'][szname][prop]
             recall_print(recall, name)
@@ -37,4 +39,4 @@ def main(model_name):
 
 
 if __name__ == '__main__':
-    main('alexnet_v2')
+    main(sys.argv[1])

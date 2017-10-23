@@ -6,17 +6,18 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import six
 
 from collections import defaultdict
 
 
-def classification_precision(ground_truth, prediction, recall_n, properties, size_ranges):
+def classification_recall(ground_truth, prediction, recall_n, properties, size_ranges):
     def error(s):
         return {'error': 1, 'msg': s}
     recall_empty = lambda: {'recalls': {n: 0 for n in recall_n}, 'n': 0}
     recall_add = lambda a, b: {'recalls': {n: a['recalls'][n] + b['recalls'][n] for n in recall_n}, 'n': a['n'] + b['n']}
     stat = dict()
-    for szname in size_ranges.keys():
+    for szname, _ in size_ranges:
         stat[szname] = {'__all__': recall_empty()}
         for prop in properties:
             stat[szname][prop] = recall_empty()
@@ -47,9 +48,12 @@ def classification_precision(ground_truth, prediction, recall_n, properties, siz
                 return error('line {} prediction {} is not a list'.format(i + 1, j + 1))
             if recall_n[-1] < len(cpr):
                 return error('line {} prediction {} contains too few candidates'.format(i + 1, j + 1))
+            for k, s in enumerate(cpr):
+                if not isinstance(s, six.text_type):
+                    return error('line {} prediction {} item {} is not a text'.format(i + 1, j + 1, k + 1))
             thisrc = {'recalls': {n: 1 if cgt['text'] in cpr[:n] else 0 for n in recall_n}, 'n': 1}
             longsize = max(cgt['size'])
-            for szname, range in size_ranges.items():
+            for szname, range in size_ranges:
                 if range[0] <= longsize and longsize < range[1]:
                     for prop in properties:
                         if prop not in cgt['properties']:
