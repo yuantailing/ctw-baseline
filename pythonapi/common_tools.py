@@ -37,7 +37,16 @@ def each_file_tuple(root):
                 yield p1, r1, d1
 
 
+def exists_and_newer(subj, obj, strict=False):
+    assert os.path.exists(obj)
+    if not os.path.exists(subj):
+        return False
+    newer = lambda a, b: a > b or (not strict and a == b)
+    return newer(os.stat(subj).st_mtime, os.stat(obj).st_mtime)
+
+
 def multithreaded_tid(func, args_list, num_thread):
+    assert 0 < num_thread
     q = queue.Queue()
     for args in args_list:
         q.put(args if isinstance(args, list) or isinstance(args, tuple)

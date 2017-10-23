@@ -16,7 +16,10 @@ from pythonapi import eval_tools
 def recall_print(recall, name):
     print(name, end=' ')
     for n, rc_n in sorted(recall['recalls'].items()):
-        print('{:.2f}%'.format(rc_n / recall['n'] * 100), end=' ')
+        if recall['n'] > 0:
+            print('{:5.2f}%'.format(rc_n / recall['n'] * 100), end=' ')
+        else:
+            print('{:5.2f}%'.format(0), end=' ')
     print('n={}'.format(recall['n']))
 
 

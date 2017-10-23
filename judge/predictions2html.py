@@ -14,6 +14,7 @@ import settings
 import six
 
 from jinja2 import Template
+from pythonapi import common_tools
 from scipy import misc
 from six.moves import cPickle
 
@@ -93,8 +94,7 @@ def create_pkl():
 def main(models, n):
     assert six.PY3
 
-    if not os.path.exists(settings.TEST_CLS_CROPPED) or \
-            os.stat(settings.TEST_CLS_CROPPED).st_mtime < os.stat(settings.TEST_CLASSIFICATION).st_mtime:
+    if common_tools.exists_and_newer(settings.TEST_CLS_CROPPED, settings.TEST_CLASSIFICATION):
         print('creating', settings.TEST_CLS_CROPPED)
         create_pkl()
 
