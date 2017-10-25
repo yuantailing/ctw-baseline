@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import cv2
+import darknet_tools
 import json
 import math
 import numpy as np
@@ -41,7 +42,8 @@ def write_darknet_cfg():
         template = Template(f.read())
     with open(settings.DARKNET_CFG, 'w') as f:
         f.write(template.render({
-            'train_image_size': settings.TRAIN_IMAGE_SIZE,
+            'testing': False,
+            'image_size': settings.TRAIN_IMAGE_SIZE,
             'classes': settings.NUM_CHAR_CATES + 1,
             'filters': 25 + 5 * (settings.NUM_CHAR_CATES + 1),
         }))
@@ -50,7 +52,7 @@ def write_darknet_cfg():
 
 def write_darknet_names():
     with open(settings.DARKNET_NAMES, 'w') as f:
-        for i in range(settings.NUM_CHAR_CATES):
+        for i in range(settings.NUM_CHAR_CATES + 1):
             f.write('{}\n'.format(i))
 
 
@@ -62,16 +64,15 @@ def download_pretrain():
 def crop_train_images():
     imshape = (2048, 2048, 3)
     cropshape = (settings.TRAIN_IMAGE_SIZE // 4, settings.TRAIN_IMAGE_SIZE // 4)
-    cropnum = int(math.ceil((imshape[0] - cropshape[0]) / (cropshape[0] - 16) + 1))
+    cropoverlap = (16, 16)
+
     with open(settings.CATES) as f:
         cates = json.load(f)
     text2cate = {c['text']: c['cate_id'] for c in cates}
-    
+
     if not os.path.isdir(settings.TRAINVAL_CROPPED_DIR):
         os.mkdir(settings.TRAINVAL_CROPPED_DIR)
-    if not os.path.isdir(settings.TEST_CROPPED_DIR):
-        os.mkdir(settings.TEST_CROPPED_DIR)
-    
+
     lines = []
     with open(settings.TRAIN) as f:
         lines += f.read().splitlines()
@@ -102,30 +103,29 @@ def crop_train_images():
                 poly = (np.array(o['polygon'])).astype(np.int32)
                 cv2.fillConvexPoly(image, poly, (128, 128, 128))
         cropped_list = list()
-        for i in range(cropnum):
-            for j in range(cropnum):
-                xlo = round(j * (imshape[1] - cropshape[1]) / (cropnum - 1))
-                xhi = xlo + cropshape[1]
-                ylo = round(i * (imshape[0] - cropshape[0]) / (cropnum - 1))
-                yhi = ylo + cropshape[0]
-                labels = []
-                for bbox, cate_id in all:
-                    x, y, w, h = bbox
-                    if x > xhi or x + w < xlo or y > yhi or y + h < ylo:
-                        continue
-                    bbox = ((x + w / 2 - xlo) / cropshape[1], (y + h / 2 - ylo) / cropshape[0], w / cropshape[1], h / cropshape[0])
-                    if 0.7 < in_image_ratio(bbox):
-                        labels.append((bbox, cate_id))
-                if 0 < len(labels):
-                    basename = '{}_{}_{}'.format(image_id, i, j)
-                    cropped_file_name = os.path.join(settings.TRAINVAL_CROPPED_DIR, '{}.jpg'.format(basename))
-                    cropped_list.append(cropped_file_name)
-                    if write_images:
-                        cropped = image[ylo:yhi, xlo:xhi]
-                        cv2.imwrite(cropped_file_name, cropped)
-                        with open(os.path.join(settings.TRAINVAL_CROPPED_DIR, '{}.txt'.format(basename)), 'w') as f:
-                            for bbox, cate_id in labels:
-                                f.write('%d %f %f %f %f\n' % ((cate_id, ) + bbox))
+        for o in darknet_tools.get_crop_bboxes(imshape, cropshape, cropoverlap):
+            xlo = o['xlo']
+            xhi = xlo + cropshape[1]
+            ylo = o['ylo']
+            yhi = ylo + cropshape[0]
+            labels = []
+            for bbox, cate_id in all:
+                x, y, w, h = bbox
+                if x > xhi or x + w < xlo or y > yhi or y + h < ylo:
+                    continue
+                bbox = ((x + w / 2 - xlo) / cropshape[1], (y + h / 2 - ylo) / cropshape[0], w / cropshape[1], h / cropshape[0])
+                if 0.7 < in_image_ratio(bbox):
+                    labels.append((bbox, cate_id))
+            if 0 < len(labels):
+                basename = '{}_{}'.format(image_id, o['name'])
+                cropped_file_name = os.path.join(settings.TRAINVAL_CROPPED_DIR, '{}.jpg'.format(basename))
+                cropped_list.append(cropped_file_name)
+                if write_images:
+                    cropped = image[ylo:yhi, xlo:xhi]
+                    cv2.imwrite(cropped_file_name, cropped)
+                    with open(os.path.join(settings.TRAINVAL_CROPPED_DIR, '{}.txt'.format(basename)), 'w') as f:
+                        for bbox, cate_id in labels:
+                            f.write('%d %f %f %f %f\n' % ((cate_id, ) + bbox))
         return cropped_list
 
     q_i = queue.Queue()

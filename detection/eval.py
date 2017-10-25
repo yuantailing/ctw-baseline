@@ -19,8 +19,9 @@ env = {
 def train_yolo():
     exefile = os.path.join(settings.DARKNET_ROOT, 'darknet')
     last_backup = darknet_tools.last_backup(settings.DARKNET_BACKUP_DIR)
-    args = [exefile, 'detector', 'train', settings.DARKNET_DATA, settings.DARKNET_CFG,
-            last_backup or settings.DARKNET_PRETRAIN]
+    assert last_backup is not None
+    args = [exefile, 'detector', 'valid', settings.DARKNET_DATA, settings.DARKNET_TEST_CFG,
+            last_backup]
 
     new_env = os.environ.copy()
     if 'CUDA_VISIBLE_DEVICES' in new_env:
