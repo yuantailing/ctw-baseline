@@ -10,18 +10,45 @@ import os
 import settings
 import subprocess
 
+from pythonapi import common_tools
+
 
 env = {
     'CUDA_VISIBLE_DEVICES': '0',
 }
 
 
-def train_yolo():
+def write_darknet_test_data(clone_id):
+    darknet_valid_list = darknet_tools.append_before_ext(settings.DARKNET_VALID_LIST, '.{}'.format(clone_id))
+    with open(settings.DARKNET_VALID_LIST) as f:
+        ls = f.read().splitlines()
+    with open(darknet_valid_list, 'w') as f:
+        for line in ls[clone_id * len(ls) // settings.TEST_SPLIT_NUM:(1 + clone_id) * len(ls) // settings.TEST_SPLIT_NUM]:
+            f.write(line)
+            f.write('\n')
+
+    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(clone_id))
+    data = {
+        'classes': settings.NUM_CHAR_CATES + 1,
+        'valid': darknet_valid_list,
+        'names': settings.DARKNET_NAMES,
+        'results': settings.DARKNET_RESULTS_DIR,
+        'eval': 'chinese',
+    }
+    with open(darknet_data, 'w') as f:
+        for k, v in sorted(data.items()):
+            f.write('{} = {}\n'.format(k, v))
+
+
+def eval_yolo(clone_id):
     exefile = os.path.join(settings.DARKNET_ROOT, 'darknet')
     last_backup = darknet_tools.last_backup(settings.DARKNET_BACKUP_DIR)
     assert last_backup is not None
-    args = [exefile, 'detector', 'valid', settings.DARKNET_DATA, settings.DARKNET_TEST_CFG,
-            last_backup]
+    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(clone_id))
+    test_results_out = darknet_tools.append_before_ext(settings.TEST_RESULTS_OUT, '.{}'.format(clone_id))
+
+    args = [exefile, 'detector', 'valid', darknet_data, settings.DARKNET_TEST_CFG,
+            last_backup, '-out', test_results_out]
 
     new_env = os.environ.copy()
     if 'CUDA_VISIBLE_DEVICES' in new_env:
@@ -37,8 +64,12 @@ def train_yolo():
 
 
 def main():
+    if not os.path.exists(settings.DARKNET_RESULTS_DIR):
+        os.mkdir(settings.DARKNET_RESULTS_DIR)
+    for i in range(settings.TEST_SPLIT_NUM):
+        write_darknet_test_data(i)
     darknet_tools.compile_darknet()
-    train_yolo()
+    common_tools.multithreaded(eval_yolo, range(settings.TEST_SPLIT_NUM), num_thread=3)
 
 
 if __name__ == '__main__':

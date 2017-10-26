@@ -23,17 +23,16 @@ def write_darknet_data():
         os.mkdir(settings.DARKNET_BACKUP_DIR)
     if not os.path.exists(settings.DARKNET_RESULTS_DIR):
         os.mkdir(settings.DARKNET_RESULTS_DIR)
-    data = [
-        ('classes', settings.NUM_CHAR_CATES + 1),
-        ('train', settings.DARKNET_TRAIN_LIST),
-        ('valid', settings.DARKNET_VALID_LIST),
-        ('names', settings.DARKNET_NAMES),
-        ('backup', settings.DARKNET_BACKUP_DIR),
-        ('results', settings.DARKNET_RESULTS_DIR),
-        ('eval', 'coco'),
-    ]
+    data = {
+        'classes': settings.NUM_CHAR_CATES + 1,
+        'train': settings.DARKNET_TRAIN_LIST,
+        'valid': settings.DARKNET_VALID_LIST,
+        'names': settings.DARKNET_NAMES,
+        'backup': settings.DARKNET_BACKUP_DIR,
+        'results': settings.DARKNET_RESULTS_DIR,
+    }
     with open(settings.DARKNET_DATA, 'w') as f:
-        for k, v in data:
+        for k, v in sorted(data.items()):
             f.write('{} = {}\n'.format(k, v))
 
 

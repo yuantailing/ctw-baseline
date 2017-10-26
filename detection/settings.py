@@ -24,5 +24,7 @@ DARKNET_VALID_LIST     = 'products/test.txt'
 
 TRAIN_IMAGE_SIZE       = 672
 TEST_IMAGE_SIZE        = 1216
+TEST_SPLIT_NUM         = 12
 TRAINVAL_CROPPED_DIR   = 'products/trainval'
 TEST_CROPPED_DIR       = 'products/test'
+TEST_RESULTS_OUT       = 'chinese'

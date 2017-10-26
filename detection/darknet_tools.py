@@ -32,6 +32,9 @@ def last_backup(backup_root):
     if not os.path.isdir(backup_root):
         return None
     basename = os.path.splitext(os.path.basename(settings.DARKNET_CFG))[0]
+    final_weights = os.path.join(backup_root, '{}_final.weights'.format(basename))
+    if os.path.isfile(final_weights):
+        return final_weights
     r = re.compile(r'^{}_(\d+)\.weights$'.format(re.escape(basename)))
     all = [(None, -1)]
     for filename in os.listdir(backup_root):
@@ -52,3 +55,8 @@ def get_crop_bboxes(imshape, cropshape, cropoverlap):
             ylo = int(round(i * (imshape[0] - cropshape[0]) / (crop_num_y - 1)))
             xlo = int(round(j * (imshape[1] - cropshape[1]) / (crop_num_x - 1)))
             yield {'name': '{}_{}'.format(i, j), 'xlo': xlo, 'ylo': ylo}
+
+
+def append_before_ext(filepath, s):
+    base, ext = os.path.splitext(filepath)
+    return '{}{}{}'.format(base, s, ext)

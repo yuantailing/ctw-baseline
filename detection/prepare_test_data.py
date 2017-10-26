@@ -87,7 +87,7 @@ def crop_test_images():
 
 def main():
     write_darknet_test_cfg()
-    if not not common_tools.exists_and_newer(settings.DARKNET_VALID_LIST, settings.CATES):
+    if not common_tools.exists_and_newer(settings.DARKNET_VALID_LIST, settings.CATES):
         crop_test_images()
 
 
