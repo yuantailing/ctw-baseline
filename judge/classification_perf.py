@@ -29,8 +29,10 @@ def main(model_name):
         gt = f.read()
     with open(model['predictions_file_path']) as f:
         pr = f.read()
-    report = eval_tools.classification_recall(gt, pr,
-        settings.RECALL_N, settings.PROPERTIES, settings.SIZE_RANGES)
+    report = eval_tools.classification_recall(
+        gt, pr,
+        settings.RECALL_N, settings.PROPERTIES, settings.SIZE_RANGES
+    )
     assert 0 == report['error'], report['msg']
     for prop in ['__all__'] + settings.PROPERTIES + ['~{}'.format(prop) for prop in settings.PROPERTIES]:
         for szname, _ in sorted(settings.SIZE_RANGES):

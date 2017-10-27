@@ -78,9 +78,11 @@ def crop_train_images():
     with open(settings.VAL) as f:
         lines += f.read().splitlines()
 
-    def in_image_ratio(bbox): # bbox is in darknet bbox representation
+    def in_image_ratio(bbox):  # bbox is in darknet bbox representation
         xmid, ymid, w, h = bbox
-        cutto01 = lambda x: max(0, min(1, x))
+
+        def cutto01(x):
+            return max(0, min(1, x))
         Acut = (cutto01(xmid + w / 2) - cutto01(xmid - w / 2)) * (cutto01(ymid + h / 2) - cutto01(ymid - h / 2))
         return Acut / (w * h)
 
@@ -129,6 +131,7 @@ def crop_train_images():
 
     q_i = queue.Queue()
     q_i.put(0)
+
     def foo(*args):
         i = q_i.get()
         if i % 100 == 0:

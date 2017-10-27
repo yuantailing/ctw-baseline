@@ -66,6 +66,7 @@ def crop_test_images():
 
     q_i = queue.Queue()
     q_i.put(0)
+
     def foo(*args):
         i = q_i.get()
         if i % 100 == 0:

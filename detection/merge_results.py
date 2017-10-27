@@ -127,7 +127,7 @@ def write(nms_sorted):
                         'text': cates[dt['cate_id']]['text'],
                         'bbox': dt['bbox'],
                         'score': dt['prob'],
-                    } for dt in detections[:1000]],
+                    } for dt in detections[:settings.MAX_DET_PER_IMAGE]],
                 },
             }))
             f.write('\n')

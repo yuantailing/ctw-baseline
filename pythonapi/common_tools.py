@@ -41,7 +41,9 @@ def exists_and_newer(subj, obj, strict=False):
     assert os.path.exists(obj)
     if not os.path.exists(subj):
         return False
-    newer = lambda a, b: a > b or (not strict and a == b)
+
+    def newer(a, b):
+        return a > b or (not strict and a == b)
     return newer(os.stat(subj).st_mtime, os.stat(obj).st_mtime)
 
 

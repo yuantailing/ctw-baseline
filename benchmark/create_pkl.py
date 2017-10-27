@@ -67,7 +67,7 @@ def main():
             train.append([cropped, char['text']])
     with open(settings.TRAINVAL_PICKLE, 'wb') as f:
         cPickle.dump(train, f)
-    train = [] # release memory
+    del train  # release memory
 
     with open(settings.TEST_CLASSIFICATION) as f:
         lines = f.read().splitlines()

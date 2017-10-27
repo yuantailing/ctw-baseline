@@ -87,6 +87,7 @@ def main():
             imgid2anno[image_id] = image_anno
     streets = []
     current_street = []
+
     def feature(basename):
         assert 25 == len(basename)
         cityid = basename[:4]
@@ -95,6 +96,7 @@ def main():
         timeid = basename[14:23]
         direction = basename[-1]
         return (cityid, streetid, dateid, timeid, direction)
+
     def like(n1, n2):
         f1, f2 = feature(n1), feature(n2)
         return (f1[0], f1[1], f1[2]) == (f2[0], f2[1], f2[2])
@@ -180,7 +182,7 @@ def main():
     print('val', len(tests[2]), count_chinese(tests[2]))
     print('test_1', len(tests[0]), count_chinese(tests[0]))
     print('test_2', len(tests[1]), count_chinese(tests[1]))
-    
+
     def basename2imgid(bn):
         a, direction = bn.split('.')
         return '{}{}'.format(direction, mapper.old2new[a])
@@ -194,7 +196,7 @@ def main():
         keys.remove('annotations')
         keys.remove('ignore')
         return {k: anno[k] for k in keys}
-    
+
     with open(settings.DATA_LIST, 'w') as f:
         def g(ds):
             return [toinfo(imgid2anno[imgid]) for imgid in ds]

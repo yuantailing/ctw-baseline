@@ -37,7 +37,7 @@ class TrainSet:
             assert label is not None
             if label is None or label >= settings.NUM_CHAR_CATES:
                 self.labels[settings.NUM_CHAR_CATES].append(image)
-            else: # label < settings.NUM_CHAR_CATES:
+            else:  # label < settings.NUM_CHAR_CATES:
                 self.labels[label].append(image)
             self.num_samples += 1
         for label in self.labels:
@@ -92,6 +92,7 @@ class TrainSet:
         tid = threading.current_thread().ident
         self.prefetch.setdefault(tid, {'thread': None, 'data': None})
         current = self.prefetch[tid]
+
         def assign_thread():
             def assign():
                 current['data'] = self.get_feed_dict_sync()
@@ -112,7 +113,9 @@ class TrainSet:
         img = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
         rows, cols, ch = img.shape
         output_size = output_width
-        r = lambda: (random.random() - 0.5) * 0.1 * output_size
+
+        def r():
+            return (random.random() - 0.5) * 0.1 * output_size
         pts1 = np.float32([[0, 0], [cols, rows], [0, rows]])
         pts2 = np.float32([[r(), r()], [output_size + r(), output_size + r()], [r(), output_size + r()]])
         M = cv2.getAffineTransform(pts1, pts2)

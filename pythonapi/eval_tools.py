@@ -14,8 +14,13 @@ from collections import defaultdict
 def classification_recall(ground_truth, prediction, recall_n, properties, size_ranges):
     def error(s):
         return {'error': 1, 'msg': s}
-    recall_empty = lambda: {'recalls': {n: 0 for n in recall_n}, 'n': 0}
-    recall_add = lambda a, b: {'recalls': {n: a['recalls'][n] + b['recalls'][n] for n in recall_n}, 'n': a['n'] + b['n']}
+
+    def recall_empty():
+        return {'recalls': {n: 0 for n in recall_n}, 'n': 0}
+
+    def recall_add(a, b):
+        return {'recalls': {n: a['recalls'][n] + b['recalls'][n] for n in recall_n}, 'n': a['n'] + b['n']}
+
     stat = dict()
     for szname, _ in size_ranges:
         stat[szname] = {'__all__': recall_empty()}
@@ -64,7 +69,7 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
     return {'error': 0, 'statistics': stat, 'group_by_characters': chars}
 
 
-def iou(bbox_0, bbox_1): # bbox is represented as (x, y, w, h)
+def iou(bbox_0, bbox_1):  # bbox is represented as (x, y, w, h)
     assert bbox_0[2] >= 0 and bbox_0[3] >= 0 and bbox_1[2] >= 0 and bbox_1[3] >= 0
     A0 = bbox_0[2] * bbox_0[3]
     A1 = bbox_1[2] * bbox_1[3]
