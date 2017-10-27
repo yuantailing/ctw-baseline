@@ -62,3 +62,15 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
                     stat[szname]['__all__'] = recall_add(stat[szname]['__all__'], thisrc)
             chars[cgt['text']] = recall_add(chars[cgt['text']], thisrc)
     return {'error': 0, 'statistics': stat, 'group_by_characters': chars}
+
+
+def iou(bbox_0, bbox_1): # bbox is represented as (x, y, w, h)
+    assert bbox_0[2] >= 0 and bbox_0[3] >= 0 and bbox_1[2] >= 0 and bbox_1[3] >= 0
+    A0 = bbox_0[2] * bbox_0[3]
+    A1 = bbox_1[2] * bbox_1[3]
+    if A0 == 0 or A1 == 0:
+        return 0
+    Nw = min(bbox_0[0] + bbox_0[2], bbox_1[0] + bbox_1[2]) - max(bbox_0[0], bbox_1[0])
+    Nh = min(bbox_0[1] + bbox_0[3], bbox_1[1] + bbox_1[3]) - max(bbox_0[1], bbox_1[1])
+    AN = max(0, Nw) * max(0, Nh)
+    return AN / (A0 + A1 - AN)

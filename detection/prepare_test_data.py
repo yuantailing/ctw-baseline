@@ -31,7 +31,6 @@ def write_darknet_test_cfg():
 
 def crop_test_images():
     imshape = (2048, 2048, 3)
-    levels = [(4, 16), (2, 64)]
 
     with open(settings.CATES) as f:
         cates = json.load(f)
@@ -50,7 +49,7 @@ def crop_test_images():
             image = cv2.imread(os.path.join(settings.TEST_IMAGE_DIR, anno['file_name']))
             assert image.shape == imshape
         cropped_list = []
-        for level_id, (cropratio, cropoverlap) in enumerate(levels):
+        for level_id, (cropratio, cropoverlap) in enumerate(settings.TEST_CROP_LEVELS):
             cropshape = (settings.TEST_IMAGE_SIZE // cropratio, settings.TEST_IMAGE_SIZE // cropratio)
             for o in darknet_tools.get_crop_bboxes(imshape, cropshape, (cropoverlap, cropoverlap)):
                 xlo = o['xlo']

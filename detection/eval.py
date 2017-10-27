@@ -18,16 +18,16 @@ env = {
 }
 
 
-def write_darknet_test_data(clone_id):
-    darknet_valid_list = darknet_tools.append_before_ext(settings.DARKNET_VALID_LIST, '.{}'.format(clone_id))
+def write_darknet_test_data(split_id):
+    darknet_valid_list = darknet_tools.append_before_ext(settings.DARKNET_VALID_LIST, '.{}'.format(split_id))
     with open(settings.DARKNET_VALID_LIST) as f:
         ls = f.read().splitlines()
     with open(darknet_valid_list, 'w') as f:
-        for line in ls[clone_id * len(ls) // settings.TEST_SPLIT_NUM:(1 + clone_id) * len(ls) // settings.TEST_SPLIT_NUM]:
+        for line in ls[split_id * len(ls) // settings.TEST_SPLIT_NUM:(1 + split_id) * len(ls) // settings.TEST_SPLIT_NUM]:
             f.write(line)
             f.write('\n')
 
-    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(clone_id))
+    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(split_id))
     data = {
         'classes': settings.NUM_CHAR_CATES + 1,
         'valid': darknet_valid_list,
@@ -40,15 +40,15 @@ def write_darknet_test_data(clone_id):
             f.write('{} = {}\n'.format(k, v))
 
 
-def eval_yolo(clone_id):
+def eval_yolo(split_id):
     exefile = os.path.join(settings.DARKNET_ROOT, 'darknet')
     last_backup = darknet_tools.last_backup(settings.DARKNET_BACKUP_DIR)
     assert last_backup is not None
-    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(clone_id))
-    test_results_out = darknet_tools.append_before_ext(settings.TEST_RESULTS_OUT, '.{}'.format(clone_id))
+    darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(split_id))
+    darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
 
     args = [exefile, 'detector', 'valid', darknet_data, settings.DARKNET_TEST_CFG,
-            last_backup, '-out', test_results_out]
+            last_backup, '-out', darknet_results_out]
 
     new_env = os.environ.copy()
     if 'CUDA_VISIBLE_DEVICES' in new_env:
