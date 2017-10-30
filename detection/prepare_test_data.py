@@ -41,7 +41,7 @@ def crop_test_images():
 
     with open(settings.DATA_LIST) as f:
         data_list = json.load(f)
-    test_cls = data_list['test_cls']
+    test_det = data_list['test_det']
 
     def crop_once(anno, write_images):
         image_id = anno['image_id']
@@ -70,14 +70,14 @@ def crop_test_images():
     def foo(*args):
         i = q_i.get()
         if i % 100 == 0:
-            print('crop test', i, '/', len(test_cls))
+            print('crop test', i, '/', len(test_det))
         q_i.put(i + 1)
         crop_once(*args)
-    common_tools.multithreaded(foo, [(anno, True) for anno in test_cls], num_thread=4)
+    common_tools.multithreaded(foo, [(anno, True) for anno in test_det], num_thread=4)
     testset = []
-    for i, anno in enumerate(test_cls):
+    for i, anno in enumerate(test_det):
         if i % 1000 == 0:
-            print('list test', i, '/', len(test_cls))
+            print('list test', i, '/', len(test_det))
         testset += crop_once(anno, False)
     with open(settings.DARKNET_VALID_LIST, 'w') as f:
         for file_name in testset:

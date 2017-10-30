@@ -40,7 +40,7 @@ def write_darknet_test_data(split_id):
             f.write('{} = {}\n'.format(k, v))
 
 
-def eval_yolo(split_id):
+def eval_yolo(split_id, tid):
     exefile = os.path.join(settings.DARKNET_ROOT, 'darknet')
     last_backup = darknet_tools.last_backup(settings.DARKNET_BACKUP_DIR)
     assert last_backup is not None
@@ -53,6 +53,8 @@ def eval_yolo(split_id):
     new_env = os.environ.copy()
     if 'CUDA_VISIBLE_DEVICES' in new_env:
         env['CUDA_VISIBLE_DEVICES'] = new_env['CUDA_VISIBLE_DEVICES']
+    if 1 != settings.TEST_NUM_GPU:
+        env['CUDA_VISIBLE_DEVICES'] = '{}'.format(tid % settings.TEST_NUM_GPU)
     new_env.update(env)
 
     for k, v in env.items():
@@ -69,7 +71,7 @@ def main():
     for i in range(settings.TEST_SPLIT_NUM):
         write_darknet_test_data(i)
     darknet_tools.compile_darknet()
-    common_tools.multithreaded(eval_yolo, range(settings.TEST_SPLIT_NUM), num_thread=3)
+    common_tools.multithreaded_tid(eval_yolo, range(settings.TEST_SPLIT_NUM), num_thread=6)
 
 
 if __name__ == '__main__':

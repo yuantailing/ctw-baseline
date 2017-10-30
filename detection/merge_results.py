@@ -19,30 +19,24 @@ from pythonapi import common_tools, eval_tools
 from six.moves import cPickle
 
 
-caches = {
-    'UNMERGED': os.path.join(settings.PRODUCTS_ROOT, 'unmerged.pkl'),
-}
-
-
 def clear_caches():
     for file_path in caches.values():
         if os.path.isfile(file_path):
             os.unlink(file_path)
 
 
-def read():
+def read(test_det):
+    with open(settings.DATA_LIST) as f:
+        data_list = json.load(f)
+    test_det = data_list['test_det']
+
     file_paths = []
     pkl_is_newer = True
     for split_id in range(settings.TEST_SPLIT_NUM):
         darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
         result_file_path = os.path.join(settings.DARKNET_RESULTS_DIR, '{}.txt'.format(darknet_results_out))
         file_paths.append(result_file_path)
-        if not common_tools.exists_and_newer(caches['UNMERGED'], result_file_path):
-            pkl_is_newer = False
-    if pkl_is_newer:
-        with open(caches['UNMERGED'], 'rb') as f:
-            return cPickle.load(f)
-    all = defaultdict(lambda: [])
+    all = {o['image_id']: [] for o in test_det}
     imshape = (2048, 2048, 3)
     removal = (1., 3.)
     size_ranges = ((8., 128.), (28., float('inf')))
@@ -83,9 +77,6 @@ def read():
 
     for file_path in file_paths:
         read_one(file_path)
-    all = dict(all)
-    with open(caches['UNMERGED'], 'wb') as f:
-        cPickle.dump(all, f)
     return all
 
 
@@ -113,22 +104,21 @@ def do_nms_sort(unmerged, nms):
     return all
 
 
-def write(nms_sorted):
+def write(nms_sorted, test_det):
     with open(settings.CATES) as f:
         cates = json.load(f)
 
     with open(os.path.join(settings.PRODUCTS_ROOT, 'detections.jsonl'), 'w') as f:
-        for image_id in sorted(nms_sorted.keys()):
+        for o in test_det:
+            image_id = o['image_id']
             detections = nms_sorted[image_id]
             detections.sort(key=lambda o: (-o['prob'], o['cate_id'], o['bbox']))
             f.write(common_tools.to_jsonl({
-                image_id: {
-                    'detections': [{
-                        'text': cates[dt['cate_id']]['text'],
-                        'bbox': dt['bbox'],
-                        'score': dt['prob'],
-                    } for dt in detections[:settings.MAX_DET_PER_IMAGE]],
-                },
+                'detections': [{
+                    'text': cates[dt['cate_id']]['text'],
+                    'bbox': dt['bbox'],
+                    'score': dt['prob'],
+                } for dt in detections[:settings.MAX_DET_PER_IMAGE]],
             }))
             f.write('\n')
 
@@ -142,16 +132,18 @@ def main():
         assert 0 == p.returncode
         return
 
-    clear_caches()
+    with open(settings.DATA_LIST) as f:
+        data_list = json.load(f)
+    test_det = data_list['test_det']
 
-    print('load darknet output')
-    unmerged = read()
+    print('loading darknet outputs')
+    unmerged = read(test_det)
 
-    print('do nms sort')
+    print('doing nms sort')
     nms_sorted = do_nms_sort(unmerged, .45)
 
-    print('write results')
-    write(nms_sorted)
+    print('writing results')
+    write(nms_sorted, test_det)
 
 
 if __name__ == '__main__':

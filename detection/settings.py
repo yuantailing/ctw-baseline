@@ -27,6 +27,7 @@ DARKNET_VALID_LIST     = 'products/test.txt'
 TRAIN_IMAGE_SIZE       = 672
 TEST_IMAGE_SIZE        = 1216
 TEST_SPLIT_NUM         = 12
+TEST_NUM_GPU           = 2
 TEST_CROP_LEVELS       = ((4, 16), (2, 64))
 TRAINVAL_CROPPED_DIR   = 'products/trainval'
 TEST_CROPPED_DIR       = 'products/test'
