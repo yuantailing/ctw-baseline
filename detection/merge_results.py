@@ -115,7 +115,7 @@ def write(nms_sorted, test_det):
             detections.sort(key=lambda o: (-o['prob'], o['cate_id'], o['bbox']))
             f.write(common_tools.to_jsonl({
                 'detections': [{
-                    'text': cates[dt['cate_id']]['text'],
+                    'text': '' if dt['cate_id'] >= settings.NUM_CHAR_CATES else cates[dt['cate_id']]['text'],
                     'bbox': dt['bbox'],
                     'score': dt['prob'],
                 } for dt in detections[:settings.MAX_DET_PER_IMAGE]],

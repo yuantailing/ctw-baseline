@@ -216,9 +216,10 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             dt_matched = [0 if in_size(o[0]) else 2 for o in dt]
             gt_taken = [0 if in_size(o[0]) else 2 for o in gt]
             for i_dt, i_gt, _ in matches:
-                if 0 == dt_matched[i_dt] and 1 != gt_taken[i_gt]:
-                    dt_matched[i_dt] = 1
-                    gt_taken[i_gt] = 1
+                if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt]:
+                    if 0 == dt_matched[i_dt] or 0 == gt_taken[i_gt]:
+                        dt_matched[i_dt] = 1
+                        gt_taken[i_gt] = 1
             for (i_dt, dtchar), match_status in zip(enumerate(dt), dt_matched):
                 if match_status == 1 or (match_status == 0 and i_dt not in in_ig):
                     m[szname][dtchar[1]]['detections'].append((match_status, dtchar[2]))

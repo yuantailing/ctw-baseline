@@ -20,7 +20,7 @@ def main(dt_file_path):
         dt = f.read()
     report = eval_tools.detection_mAP(
         gt, dt,
-        settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET, settings.IOU_THRESH
+        settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH
     )
     assert 0 == report['error'], report['msg']
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
