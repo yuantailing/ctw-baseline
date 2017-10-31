@@ -37,7 +37,7 @@ def main(model_name):
     for prop in ['__all__'] + settings.PROPERTIES + ['~{}'.format(prop) for prop in settings.PROPERTIES]:
         for szname, _ in sorted(settings.SIZE_RANGES):
             name = '{:12s} & {:12s}'.format(szname, prop)
-            recall = report['statistics'][szname][prop]
+            recall = report['performance'][szname][prop]
             recall_print(recall, name)
     for char, recall in sorted(report['group_by_characters'].items(), key=lambda o: -o[1]['n'])[:10]:
         recall_print(recall, char)

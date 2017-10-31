@@ -27,3 +27,5 @@ PROPERTIES             = [
     'wordart',
     'handwritten',
 ]
+MAX_DET                = 1000
+IOU_THRESH             = .5
