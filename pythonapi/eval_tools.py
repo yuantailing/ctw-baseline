@@ -194,7 +194,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 ig.append((poly2bbox(char['polygon']), char['text']))
 
         matches = []
-        in_ig = []
+        dt_ig = [False] * len(dt)
         for j, dtchar in enumerate(dt):
             for k, gtchar in enumerate(gt):
                 if dtchar[1] == gtchar[1]:
@@ -205,30 +205,28 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             for k, igchar in enumerate(ig):
                 miou = a_in_b(dtchar[0], igchar[0])
                 if miou > iou_thresh:
-                    in_ig.append(j)
+                    dt_ig[j] = True
         matches.sort(key=lambda t: (-t[2], t[0], t[1]))
-        in_ig = set(in_ig)
 
         for szname, size_range in size_ranges:
             def in_size(bbox):
                 longsize = max(bbox[2], bbox[3])
                 return  size_range[0] <= longsize and longsize < size_range[1]
 
-            dt_matched = [0 if in_size(o[0]) else 2 for o in dt]
+            dt_matched = [0 if in_size(o[0]) and False == b else 2 for o, b in zip(dt, dt_ig)]
             gt_taken = [0 if in_size(o[0]) else 2 for o in gt]
             for i_dt, i_gt, _ in matches:
                 if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt]:
-                    if 0 == dt_matched[i_dt]:
+                    if 0 == gt_taken[i_gt]:
                         dt_matched[i_dt] = 1
                         gt_taken[i_gt] = 1
                     else:
                         dt_matched[i_dt] = 2
-            for (i_dt, dtchar), match_status in zip(enumerate(dt), dt_matched):
-                if match_status == 1 or (match_status == 0 and i_dt not in in_ig):
+            for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
+                if match_status != 2:
                     m[szname][dtchar[1]]['detections'].append((match_status, dtchar[2]))
             for gtchar, taken in zip(gt, gt_taken):
                 if taken != 2:
-                    assert taken in (0, 1)
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
                     for prop in gtchar[2]:
