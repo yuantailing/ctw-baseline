@@ -22,7 +22,7 @@ def compile():
     makefile = os.path.join(cwd, 'Makefile')
 
     if not os.path.isdir(cwd):
-        common_tools.mkdirs(cwd)
+        os.makedirs(cwd)
 
     args = ['qmake', os.path.abspath(pro), 'CONFIG+=release']
     print(*args)
@@ -74,7 +74,7 @@ def main():
         return list(filter(lambda o: o['score'] > thresh, dt['detections']))
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING):
-        common_tools.mkdirs(settings.PRINTTEXT_DRAWING)
+        os.makedirs(settings.PRINTTEXT_DRAWING)
     tasks = []
     for i in range(0, len(gts), 100):
         gt = json.loads(gts[i])

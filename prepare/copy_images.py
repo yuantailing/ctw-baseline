@@ -28,11 +28,11 @@ def main():
         shutil.copy(m[file_name], os.path.join(copy_dest, file_name))
 
     copy_dest = settings.TRAINVAL_IMAGE_DIR
-    common_tools.mkdirs(copy_dest)
+    os.makedirs(copy_dest)
     common_tools.multithreaded(cp, data_list['train'] + data_list['val'], num_thread=8)
 
     copy_dest = settings.TEST_IMAGE_DIR
-    common_tools.mkdirs(copy_dest)
+    os.makedirs(copy_dest)
     common_tools.multithreaded(cp, data_list['test_cls'] + data_list['test_det'], num_thread=8)
 
 if __name__ == '__main__':

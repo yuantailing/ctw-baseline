@@ -16,14 +16,6 @@ def to_jsonl(obj):
     return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, sort_keys=True)
 
 
-def mkdirs(path):
-    parent = os.path.dirname(path)
-    if parent and not os.path.isdir(parent):
-        mkdirs(parent)
-    if not os.path.isdir(path):
-        os.mkdir(path)
-
-
 def each_file_tuple(root):
     tasks = [(root, '')]
     while tasks:

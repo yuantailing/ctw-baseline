@@ -67,7 +67,7 @@ def eval_yolo(split_id, tid):
 
 def main():
     if not os.path.exists(settings.DARKNET_RESULTS_DIR):
-        os.mkdir(settings.DARKNET_RESULTS_DIR)
+        os.makedirs(settings.DARKNET_RESULTS_DIR)
     for i in range(settings.TEST_SPLIT_NUM):
         write_darknet_test_data(i)
     darknet_tools.compile_darknet()

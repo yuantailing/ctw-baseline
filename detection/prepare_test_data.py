@@ -37,7 +37,7 @@ def crop_test_images():
     text2cate = {c['text']: c['cate_id'] for c in cates}
 
     if not os.path.isdir(settings.TEST_CROPPED_DIR):
-        os.mkdir(settings.TEST_CROPPED_DIR)
+        os.makedirs(settings.TEST_CROPPED_DIR)
 
     with open(settings.DATA_LIST) as f:
         data_list = json.load(f)
