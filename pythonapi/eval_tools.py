@@ -92,6 +92,7 @@ def a_in_b(bbox_0, bbox_1):
     AN = max(0, Nw) * max(0, Nh)
     return AN / A0
 
+
 def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh):
     def error(s):
         return {'error': 1, 'msg': s}
@@ -217,9 +218,11 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             gt_taken = [0 if in_size(o[0]) else 2 for o in gt]
             for i_dt, i_gt, _ in matches:
                 if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt]:
-                    if 0 == dt_matched[i_dt] or 0 == gt_taken[i_gt]:
+                    if 0 == dt_matched[i_dt]:
                         dt_matched[i_dt] = 1
                         gt_taken[i_gt] = 1
+                    else:
+                        dt_matched[i_dt] = 2
             for (i_dt, dtchar), match_status in zip(enumerate(dt), dt_matched):
                 if match_status == 1 or (match_status == 0 and i_dt not in in_ig):
                     m[szname][dtchar[1]]['detections'].append((match_status, dtchar[2]))
@@ -246,6 +249,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             for prop in props_all:
                 properties[prop]['n'] += stat['properties'][prop]['n']
                 properties[prop]['recall'] += stat['properties'][prop]['recall']
+        assert 0 < n
         performance[szname] = {
             'n': n,
             'mAP': mAP / n,

@@ -39,7 +39,7 @@ def read(test_det):
     all = {o['image_id']: [] for o in test_det}
     imshape = (2048, 2048, 3)
     removal = (1., 3.)
-    size_ranges = ((8., 128.), (28., float('inf')))
+    size_ranges = ((6., 128.), (24., float('inf')))
     levelmap = dict()
     for level_id, (cropratio, cropoverlap) in enumerate(settings.TEST_CROP_LEVELS):
         cropshape = (settings.TEST_IMAGE_SIZE // cropratio, settings.TEST_IMAGE_SIZE // cropratio)
@@ -64,7 +64,7 @@ def read(test_det):
             cx, cy, cw, ch = levelmap[level_id, crop_name]
             cate_id = int(cate_id)
             x, y, w, h, prob = float(x), float(y), float(w), float(h), float(prob)
-            longsize = max(x, y)
+            longsize = max(w, h)
             size_range = size_ranges[level_id]
             if longsize < size_range[0] or size_range[1] <= longsize:
                 continue
@@ -92,14 +92,14 @@ def do_nms_sort(unmerged, nms):
             cates[proposal['cate_id']].append(proposal)
         for cate_id, proposal in cates.items():
             a = sorted(proposal, key=lambda o: -o['prob'])
-            ignored = set()
-            for i in range(len(a)):
-                if i in ignored:
-                    continue
-                for j in range(i + 1, len(a)):
-                    if j not in ignored and eval_tools.iou(a[i]['bbox'], a[j]['bbox']) > nms:
-                        ignored.add(j)
-            cates[cate_id] = [o for i, o in enumerate(a) if i not in ignored]
+            na = []
+            for o in a:
+                covered = 0
+                for no in na:
+                    covered += eval_tools.a_in_b(o['bbox'], no['bbox'])
+                if covered <= nms:
+                    na.append(o)
+            cates[cate_id] = na
         all[image_id] = functools.reduce(lambda a, b: a + b, cates.values(), [])
     return all
 
@@ -114,6 +114,7 @@ def write(nms_sorted, test_det):
             detections = nms_sorted[image_id]
             detections.sort(key=lambda o: (-o['prob'], o['cate_id'], o['bbox']))
             f.write(common_tools.to_jsonl({
+                'image_id': image_id,
                 'detections': [{
                     'text': '' if dt['cate_id'] >= settings.NUM_CHAR_CATES else cates[dt['cate_id']]['text'],
                     'bbox': dt['bbox'],
@@ -140,7 +141,7 @@ def main():
     unmerged = read(test_det)
 
     print('doing nms sort')
-    nms_sorted = do_nms_sort(unmerged, .45)
+    nms_sorted = do_nms_sort(unmerged, .5)
 
     print('writing results')
     write(nms_sorted, test_det)
