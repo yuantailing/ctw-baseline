@@ -7,10 +7,8 @@ from __future__ import unicode_literals
 
 import json
 import os
-import random
 import settings
 import subprocess
-import sys
 
 from multiprocessing import cpu_count
 from pythonapi import anno_tools, common_tools
@@ -81,12 +79,16 @@ def main():
         dt = json.loads(dts[i])
         image_id = gt['image_id']
         file_name = os.path.join(settings.TEST_IMAGE_DIR, gt['file_name'])
-        tasks.append((file_name,
-                   os.path.join(settings.PRINTTEXT_DRAWING, '{}_gt.png'.format(image_id)),
-                   '#f00', gt2array(gt)))
-        tasks.append((file_name,
-                   os.path.join(settings.PRINTTEXT_DRAWING, '{}_dt.png'.format(image_id)),
-                   '#0f0', dt2array(dt)))
+        tasks.append((
+            file_name,
+            os.path.join(settings.PRINTTEXT_DRAWING, '{}_gt.png'.format(image_id)),
+            '#f00', gt2array(gt),
+        ))
+        tasks.append((
+            file_name,
+            os.path.join(settings.PRINTTEXT_DRAWING, '{}_dt.png'.format(image_id)),
+            '#0f0', dt2array(dt),
+        ))
     common_tools.multithreaded(print_text, tasks, num_thread=cpu_count())
 
 

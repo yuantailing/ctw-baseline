@@ -6,9 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
-import predictions2html
 import settings
-import sys
 
 from pythonapi import eval_tools
 
@@ -23,7 +21,7 @@ def main(dt_file_path):
         settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH
     )
     assert 0 == report['error'], report['msg']
-    print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+    print(json.dumps(report, indent=2, sort_keys=True))
 
 
 if __name__ == '__main__':

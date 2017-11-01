@@ -5,17 +5,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import codecs
 import json
-import numpy as np
 import settings
 
 from collections import defaultdict
-from six.moves import cPickle
 from pythonapi import anno_tools
 
 
 def main():
-    np.random.seed(0)
     counts = defaultdict(lambda: 0)
     with open(settings.TRAIN) as f, open(settings.VAL) as f2:
         for line in f.read().splitlines() + f2.read().splitlines():
@@ -28,7 +26,7 @@ def main():
     a = sorted([(-v, k) for k, v in counts.items()])
     ordered = [t[1] for t in a]
     cates = [{'cate_id': i, 'text': k, 'trainval': counts[k]} for i, k in enumerate(ordered)]
-    with open(settings.CATES, 'w') as f:
+    with codecs.open(settings.CATES, 'w', 'utf-8') as f:
         json.dump(cates, f, ensure_ascii=False, allow_nan=False, indent=2, sort_keys=True)
 
 
