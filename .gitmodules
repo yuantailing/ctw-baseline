@@ -1,3 +1,4 @@
 [submodule "detection/darknet"]
 	path = detection/darknet
 	url = git@github.com:yuantailing/darknet.git
+	branch = chinese
