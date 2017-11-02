@@ -112,10 +112,10 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
 
     def AP_compute(m):
         if 0 == m['n']:
-            return 0
+            return 0., []
         acc = []
         rc_inc = []
-        m['detections'].sort(key=lambda t: (-t[1], -t[0]))
+        m['detections'].sort(key=lambda t: (-t[1], t[0]))
         match_cnt = 0
         for i, (matched, _) in enumerate(m['detections']):
             assert matched in (0, 1)
@@ -127,11 +127,15 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             max_acc = max(max_acc, acc[i])
             acc[i] = max_acc
         AP = 0
+        curve = []
         for a, r in zip(acc, rc_inc):
             AP += a * r
-        return AP / m['n']
+            if 1 == r:
+                curve.append(a)
+        return AP / m['n'], curve
 
     props_all = properties + ['__all__']
+    charset = set()
     m = dict()
     for szname, _ in size_ranges:
         m[szname] = defaultdict(AP_empty)
@@ -145,7 +149,6 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         if i % 200 == 0:
             print(i, '/', len(gts))
 
-        gtobj = json.loads(gt)
         try:
             dt = json.loads(dt)
         except:
@@ -185,6 +188,10 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         dt.sort(key=lambda o: (-o['score'], o['bbox'], o['text']))
         dt = [(o['bbox'], o['text'], o['score']) for o in dt]
 
+        gtobj = json.loads(gt)
+        for char in anno_tools.each_char(gtobj):
+            if char['is_chinese']:
+                charset.add(char['text'])
         ig = [(o['bbox'], None) for o in gtobj['ignore']]
         gt = []
         for char in anno_tools.each_char(gtobj):
@@ -238,19 +245,29 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
     performance = dict()
     for szname, _ in size_ranges:
         n = 0
-        mAP = 0
+        mAP = 0.
         properties = {prop: {'n': 0, 'recall': 0} for prop in props_all}
+        texts = {c: 0. for c in charset}
+        stat_all = AP_empty()
         for text, stat in m[szname].items():
             n += stat['n']
-            AP = AP_compute(stat)
+            AP, _ = AP_compute(stat)
             mAP += AP * stat['n']
             for prop in props_all:
                 properties[prop]['n'] += stat['properties'][prop]['n']
                 properties[prop]['recall'] += stat['properties'][prop]['recall']
+            if text in charset:
+                texts[text] = AP
+            stat_all['n'] += stat['n']
+            stat_all['detections'] += stat['detections']
         assert 0 < n
+        AP_all, curve = AP_compute(stat_all)
         performance[szname] = {
             'n': n,
             'mAP': mAP / n,
             'properties': properties,
+            'texts': texts,
+            'AP': AP_all,
+            'curve': curve,
         }
     return {'error': 0, 'performance': performance}
