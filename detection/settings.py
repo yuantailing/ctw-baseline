@@ -5,9 +5,9 @@ VAL                    = '../data/annotations/val.jsonl'
 TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
-NUM_CHAR_CATES         = 1000
 PRODUCTS_ROOT          = 'products'
 CATES                  = 'products/cates.json'
+NUM_CHAR_CATES         = 1000
 MAX_DET_PER_IMAGE      = 1000
 
 DARKNET_ROOT           = 'darknet'

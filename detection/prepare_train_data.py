@@ -8,7 +8,6 @@ from __future__ import unicode_literals
 import cv2
 import darknet_tools
 import json
-import math
 import numpy as np
 import os
 import settings
