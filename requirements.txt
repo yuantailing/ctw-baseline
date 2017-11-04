@@ -1,5 +1,6 @@
 Jinja2
 opencv-python
+scikit-image
 scipy
 six
 tensorflow-gpu>=1.4.0rc0
