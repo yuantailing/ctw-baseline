@@ -114,7 +114,7 @@ def crop_train_images():
                 if x > xhi or x + w < xlo or y > yhi or y + h < ylo:
                     continue
                 bbox = ((x + w / 2 - xlo) / cropshape[1], (y + h / 2 - ylo) / cropshape[0], w / cropshape[1], h / cropshape[0])
-                if 0.7 < in_image_ratio(bbox):
+                if 0.5 < in_image_ratio(bbox):
                     labels.append((bbox, cate_id))
             if 0 < len(labels):
                 basename = '{}_{}'.format(image_id, o['name'])

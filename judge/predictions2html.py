@@ -94,7 +94,7 @@ def create_pkl():
 def main(models, n):
     assert six.PY3
 
-    if common_tools.exists_and_newer(settings.TEST_CLS_CROPPED, settings.TEST_CLASSIFICATION):
+    if not common_tools.exists_and_newer(settings.TEST_CLS_CROPPED, settings.TEST_CLASSIFICATION):
         print('creating', settings.TEST_CLS_CROPPED)
         create_pkl()
 

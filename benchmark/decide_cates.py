@@ -23,9 +23,13 @@ def main():
                     text = char['text']
                     assert 1 == len(text)
                     counts[text] += 1
-    a = sorted([(-v, k) for k, v in counts.items()])
-    ordered = [t[1] for t in a]
-    cates = [{'cate_id': i, 'text': k, 'trainval': counts[k]} for i, k in enumerate(ordered)]
+    cates = [{
+        'text': k,
+        'trainval': v,
+    } for k, v in counts.items()]
+    cates.sort(key=lambda o: (-o['trainval'], o['text']))
+    for i, o in enumerate(cates):
+        o['cate_id'] = i
     with codecs.open(settings.CATES, 'w', 'utf-8') as f:
         json.dump(cates, f, ensure_ascii=False, allow_nan=False, indent=2, sort_keys=True)
 
