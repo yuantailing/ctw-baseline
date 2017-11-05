@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import functools
 import json
 import os
 import threading
@@ -39,29 +40,41 @@ def exists_and_newer(subj, obj, strict=False):
     return newer(os.stat(subj).st_mtime, os.stat(obj).st_mtime)
 
 
-def multithreaded_tid(func, args_list, num_thread):
+def reduce_sum(*args):
+    return functools.reduce(lambda a, b: a + b, *args)
+
+
+def multithreaded_tid(func, args_list, num_thread, logfunc=None):
     assert 0 < num_thread
+    n = len(args_list)
+    args_list = [args if isinstance(args, list) or isinstance(args, tuple)
+                 else (args, ) for args in args_list]
     q = queue.Queue()
-    for args in args_list:
-        q.put(args if isinstance(args, list) or isinstance(args, tuple)
-              else (args, ))
+    for i in range(n):
+        q.put(i)
+    p = queue.Queue()
 
     def parallel_work(tid):
         while True:
             try:
-                t = q.get(block=False)
+                i = q.get(block=False)
+                p.put(i)
             except queue.Empty as e:
                 return
-            func(*t, tid=tid)
+            func(*args_list[i], tid=tid)
     threads = [threading.Thread(target=parallel_work, args=(i, ))
                for i in range(num_thread)]
     for t in threads:
         t.start()
+    if logfunc is not None:
+        while 0 < n:
+            logfunc(*args_list[p.get(block=True)])
+            n -= 1
     for t in threads:
         t.join()
 
 
-def multithreaded(func, args_list, num_thread):
+def multithreaded(func, args_list, num_thread, logfunc=None):
     def foo(*args, **kwargs):
         func(*args)
-    return multithreaded_tid(foo, args_list, num_thread)
+    return multithreaded_tid(foo, args_list, num_thread, logfunc=logfunc)

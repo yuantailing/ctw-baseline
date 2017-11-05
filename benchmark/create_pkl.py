@@ -19,7 +19,7 @@ from pythonapi import anno_tools, common_tools
 
 def crop(image, bbox):
     expand = 0.1
-    maxlong = 64
+    maxlong = 128
     x, y, w, h = bbox
     x -= w * expand
     w += w * expand * 2
@@ -53,36 +53,43 @@ def main():
         lines = f.read().splitlines()
     with open(settings.VAL) as f:
         lines += f.read().splitlines()
-    train = []
-    for i, line in enumerate(lines):
+    train = [[] for _ in lines]
+
+    def load_train(i):
         if i % 100 == 0:
             print('trainval', i, '/', len(lines))
-        anno = json.loads(line.strip())
+        anno = json.loads(lines[i].strip())
         image = misc.imread(os.path.join(settings.TRAINVAL_IMAGE_DIR, anno['file_name']))
         assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno_tools.each_char(anno):
             if not char['is_chinese']:
                 continue
             cropped = crop(image, char['adjusted_bbox'])
-            train.append([cropped, char['text']])
+            train[i].append([cropped, char['text']])
+    common_tools.multithreaded(load_train, range(len(lines)), num_thread=8)
+    train = common_tools.reduce_sum(train)
     with open(settings.TRAINVAL_PICKLE, 'wb') as f:
         cPickle.dump(train, f)
     del train  # release memory
 
     with open(settings.TEST_CLASSIFICATION) as f:
         lines = f.read().splitlines()
-    test = []
-    for i, line in enumerate(lines):
+    test = [[] for _ in lines]
+
+    def load_test(i):
         if i % 100 == 0:
-            print('trainval', i, '/', len(lines))
-        anno = json.loads(line.strip())
+            print('test', i, '/', len(lines))
+        anno = json.loads(lines[i].strip())
         image = misc.imread(os.path.join(settings.TEST_IMAGE_DIR, anno['file_name']))
         assert image.shape == (anno['height'], anno['width'], 3)
         for char in anno['proposals']:
             cropped = crop(image, char['adjusted_bbox'])
-            test.append([cropped, None])
+            test[i].append([cropped, None])
+    common_tools.multithreaded(load_test, range(len(lines)), num_thread=8)
+    test = common_tools.reduce_sum(test)
     with open(settings.TEST_PICKLE, 'wb') as f:
         cPickle.dump(test, f)
+    del test
 
 
 if __name__ == '__main__':
