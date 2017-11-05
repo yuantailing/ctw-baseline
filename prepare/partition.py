@@ -8,13 +8,14 @@ from __future__ import unicode_literals
 import bisect
 import codecs
 import json
+import math
 import numpy as np
 import os
 import settings
 
 from collections import defaultdict
 from filename_mapper import mapper
-from pythonapi import anno_tools, common_tools
+from pythonapi import anno_tools, common_tools, eval_tools
 
 
 def get_allowed_filename():
@@ -41,9 +42,16 @@ def get_allowed_filename():
     return set(md52old[md5][1] for md5 in allowed_md5)
 
 
-def is_legal_char(imshape):
+def bbox2poly(bbox):
+    x, y, w, h = bbox
+    return [[x, y], [x, y + h], [x + w, y + h], [x + w, y]]
+
+
+def is_legal_char(imshape, logo_bbox):
     def g(char):
-        x, y, w, h = char['adjusted_bbox']
+        x, y, w, h = bbox = char['adjusted_bbox']
+        if logo_bbox and .5 < eval_tools.a_in_b(bbox, logo_bbox):
+            return False
         assert w > 0 and h > 0
         if w <= 0 or h <= 0:
             return False
@@ -64,10 +72,18 @@ def main():
     with codecs.open(settings.OVERALL_ANNOTATIONS, 'r', 'utf-8') as f:
         for line in f:
             image_anno = json.loads(line.strip())
-            for i, blk in enumerate(image_anno['annotations']):
-                image_anno['annotations'][i] = list(filter(is_legal_char((image_anno['height'], image_anno['width'], 3)), blk))
-            image_anno['annotations'] = list(filter(lambda a: a, image_anno['annotations']))
             image_id = image_anno['image_id']
+            if image_id[:3] == '204':
+                logo_bbox = [810., 1800., 460., 100.]
+                image_anno['ignore'].append({
+                    'bbox': logo_bbox,
+                    'polygon': bbox2poly(logo_bbox),
+                })
+            else:
+                logo_bbox = None
+            for i, blk in enumerate(image_anno['annotations']):
+                image_anno['annotations'][i] = list(filter(is_legal_char((image_anno['height'], image_anno['width'], 3), logo_bbox), blk))
+            image_anno['annotations'] = list(filter(lambda a: a, image_anno['annotations']))
             direction = image_id[0]
             onew = image_id[1:]
             oold = mapper.new2old[onew]
@@ -115,7 +131,7 @@ def main():
     np.random.seed(0)
     train = []
     tests = [[], [], []]
-    requires = [100000, 100000, 50000]
+    requires = [101000, 101000, 50500]
 
     basenames = sorted(mapper.old2new.keys())
     for i, st in enumerate(streets):
@@ -143,7 +159,7 @@ def main():
                         break
                 st = st[j:]
                 hi = ntrainval
-                if len(st) < ntrainval * 3 // 2 + ntest * 2 + ninterval * 2:
+                if len(st) < ntrainval * (math.sqrt(5) + 1) / 2 + ntest * 2 + ninterval * 2:
                     hi = len(st)
                 j = np.random.randint(0, 2)
                 train += st[j * nval:hi - nval + j * nval]
@@ -171,7 +187,7 @@ def main():
         if counts[j] >= requires[j]:
             continue
         st = streets[i]
-        if 1000 < len(st):
+        if 300 < len(st):
             continue
         tests[j] += streets.pop(i)
         counts[j] = count_chinese(tests[j])

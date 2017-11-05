@@ -25,7 +25,7 @@ def main():
     def cp(desc):
         file_name = desc['file_name']
         assert file_name in m
-        shutil.copy(m[file_name], os.path.join(copy_dest, file_name))
+        os.symlink(os.path.abspath(m[file_name]), os.path.join(copy_dest, file_name))
 
     copy_dest = settings.TRAINVAL_IMAGE_DIR
     os.makedirs(copy_dest)
