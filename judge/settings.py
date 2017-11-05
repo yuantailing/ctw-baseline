@@ -9,9 +9,12 @@ TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
 PRODUCTS_ROOT          = 'products'
+COUNT_CHINESE          = 'products/count_chinese.json'
 TEST_CLS_CROPPED       = 'products/test_cls_cropped.pkl'
 PREDICTIONS_HTML       = 'products/predictions_compare.html'
 DETECTION_REPORT       = 'products/detection_report.json'
+PRINTTEXT_EXEC         = 'products/build-printtext-release/printtext'
+PRINTTEXT_DRAWING      = 'products/printtext-drawing'
 
 RECALL_N               = (1, 5)
 SIZE_RANGES            = [

@@ -33,9 +33,16 @@ def main():
                 if char['is_chinese']:
                     counts[char['text']]['test_det'] += 1
 
-    counts = [{'text': k, 'trainval': v['trainval'], 'test_cls': v['test_cls'], 'test_det': v['test_det']} for k, v in counts.items()]
+    counts = [{
+        'text': k,
+        'trainval': v['trainval'],
+        'test_cls': v['test_cls'],
+        'test_det': v['test_det'],
+    } for k, v in counts.items()]
     counts.sort(key=lambda o: (-o['trainval'] - o['test_cls'] - o['test_det'], o['text']))
-    with codecs.open(settings.CHINESE_COUNT, 'w', 'utf-8') as f:
+    for i, o in enumerate(counts):
+        o['id'] = i
+    with codecs.open(settings.COUNT_CHINESE, 'w', 'utf-8') as f:
         json.dump(counts, f, ensure_ascii=False, allow_nan=False, indent=2, sort_keys=True)
 
 
