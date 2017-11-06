@@ -15,7 +15,9 @@ PREDICTIONS_HTML       = 'products/predictions_compare.html'
 CLASSIFICATION_REPORT  = 'products/explore_cls.html'
 DETECTION_REPORT       = 'products/detection_report.json'
 PRINTTEXT_EXEC         = 'products/build-printtext-release/printtext'
-PRINTTEXT_DRAWING      = 'products/printtext-drawing'
+PRINTTEXT_DRAWING_DIR  = 'products/printtext-drawing'
+PROPS_SAMPLE_DIR       = 'products/props-sample'
+
 
 RECALL_N               = (1, 5)
 SIZE_RANGES            = [

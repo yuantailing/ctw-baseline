@@ -38,9 +38,8 @@ for cfg in cfgs:
     cfg['predictions_file_path'] = os.path.join('..', 'benchmark', 'products', 'predictions_{}.jsonl'.format(cfg['model_name']))
 
 
-def crop(image, bbox):
+def crop(image, bbox, maxlong):
     expand = 0
-    maxlong = 32
     x, y, w, h = bbox
     x -= w * expand
     w += w * expand * 2
@@ -83,7 +82,7 @@ def create_pkl():
         assert image.shape == (anno['height'], anno['width'], 3)
         assert len(anno['proposals']) == len(gt_anno['ground_truth'])
         for proposal, gt in zip(anno['proposals'], gt_anno['ground_truth']):
-            cropped = crop(image, proposal['adjusted_bbox'])
+            cropped = crop(image, proposal['adjusted_bbox'], 32)
             test.append([cropped, gt])
         if i % 100 == 0:
             print('test', i, '/', len(lines))

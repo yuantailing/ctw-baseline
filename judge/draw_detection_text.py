@@ -71,8 +71,8 @@ def main():
     def dt2array(dt, thresh=.5):
         return list(filter(lambda o: o['score'] > thresh, dt['detections']))
 
-    if not os.path.isdir(settings.PRINTTEXT_DRAWING):
-        os.makedirs(settings.PRINTTEXT_DRAWING)
+    if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
+        os.makedirs(settings.PRINTTEXT_DRAWING_DIR)
     tasks = []
     for i in range(0, len(gts), 100):
         gt = json.loads(gts[i])
@@ -81,12 +81,12 @@ def main():
         file_name = os.path.join(settings.TEST_IMAGE_DIR, gt['file_name'])
         tasks.append((
             file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING, '{}_gt.png'.format(image_id)),
+            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_gt.png'.format(image_id)),
             '#f00', gt2array(gt),
         ))
         tasks.append((
             file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING, '{}_dt.png'.format(image_id)),
+            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_dt.png'.format(image_id)),
             '#0f0', dt2array(dt),
         ))
     common_tools.multithreaded(print_text, tasks, num_thread=cpu_count())
