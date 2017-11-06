@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+	<title>Explore</title>
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	<link href="https://cdn.bootcss.com/bootstrap-switch/3.3.4/css/bootstrap3/bootstrap-switch.min.css" rel="stylesheet">
+	<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script src="https://cdn.bootcss.com/bootstrap-switch/3.3.4/js/bootstrap-switch.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+</head>
+<body>
+	<div class="container">
+		<h2>Explore classification performance</h2>
+		<div class="row">
+			<div class="col-md-12">
+				<div class="switch">
+					<input id="recall-at-1" type="checkbox" checked />
+				</div>
+			</div>
+		</div>
+		<div class="row selectors">
+		</div>
+		<div class="chart-container">
+			<canvas id="chart"></canvas>
+		</div>
+	</div>
+	<div class="template" hidden>
+		<div class="property-selector-group col-md-2">
+			<div><label style="font-weight: normal;"><input id="check-property" type="checkbox" checked><span id="property">property</span></label></div>
+			<div><label style="font-weight: normal;"><input id="check-no-property" type="checkbox" checked><span id="no-property">~property</span></label></div>
+		</div>
+	</div>
+	<script>
+var data = {{ report_all }};
+var properties = {{ properties }};
+
+$(document).ready(function() {
+	var ctx = document.getElementById('chart').getContext('2d');
+	var chart = null;
+	function update_stat() {
+		function recall_empty() {
+			return {n: 0, recall: 0};
+		}
+		function recall_add(a, b) {
+			return {n: a.n + b.n, recall: a.recall + b.recall}
+		}
+		var excepts = [];
+		$.map($('.selectors').find('input'), function(input) {
+			var data = $(input).data();
+			if (!input.checked) {
+				excepts.push($(input).data());
+			}
+		});
+		var recall_n = document.getElementById('recall-at-1').checked ? 1 : 5;
+		all_models = [];
+		$.map(data, function(model) {
+			console.assert(0 == model.report.error);
+			model_rc = [];
+			$.each(model.report.performance, function(szname, prop_rcs) {
+				var sz_rc = recall_empty();
+				$.each(prop_rcs, function(id, rcs) {
+					var ok = true;
+					$.map(excepts, function(ex) {
+						if (ex.contains) {
+							if (0 != (id & 2 ** ex.property))
+								ok = false;
+						} else {
+							if (0 == (id & 2 ** ex.property))
+								ok = false;
+						}
+					});
+					if (ok) {
+						var thisrc = {n: rcs.n, recall: rcs.recalls[recall_n]};
+						sz_rc = recall_add(sz_rc, thisrc);
+					}
+				});
+				model_rc.push({size_name: szname, recall: sz_rc});
+			});
+			all_models.push({model_name: model.model_name, recall: model_rc});
+		});
+		var labels = [];
+		var datasets = [];
+		$.map(all_models, function(model) {
+			labels.push(model.model_name);
+			$.each(model.recall, function(i, szobj) {
+				if (datasets.length <= i)
+					datasets.push({
+						label: szobj.size_name + " (n=" + szobj.recall.n + ")",
+						data: [],
+						backgroundColor: "rgba(" + (200 - i * 40) + ", " + 0 + ", " + (255 - i * 30) + ", 0.5)",
+					});
+				datasets[i].data.push(100. * szobj.recall.recall / szobj.recall.n);
+			});
+		});
+		if (null === chart) {
+			chart = new Chart(ctx, {
+				type: 'bar',
+				data: {
+					labels: labels,
+					datasets: datasets,
+				},
+				options: {
+					scales: {
+						yAxes: [{
+							ticks: {
+								min: 0,
+								max: 100,
+							}
+						}]
+					}
+				},
+			});
+		} else {
+			chart.data.datasets = datasets;
+			chart.update(0);
+		}
+	}
+	console.assert(0 < data.length);
+	$.each(properties, function(k, v) {
+		var parent = $('.selectors');
+		var div = $('.template .property-selector-group').clone();
+		div.find('#property').text(v);
+		div.find('#no-property').text('~' + v);
+		div.find('#check-property').data({contains: true, property: k});
+		div.find('#check-no-property').data({contains: false, property: k});
+		parent.append(div);
+	});
+	update_stat();
+	$('.selectors').find('input').change(update_stat);
+	$('#recall-at-1').bootstrapSwitch({
+		onText: 'Recall@1',
+		offText: 'Recall@5',
+		onSwitchChange: function() {
+			update_stat();
+		}
+	});
+});
+	</script>
+</body>
+</html>

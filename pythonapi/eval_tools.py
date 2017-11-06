@@ -24,10 +24,9 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
 
     stat = dict()
     for szname, _ in size_ranges:
-        stat[szname] = {'__all__': recall_empty()}
-        for prop in properties:
-            stat[szname][prop] = recall_empty()
-            stat[szname]['~{}'.format(prop)] = recall_empty()
+        stat[szname] = dict()
+        for i in range(2 ** len(properties)):
+            stat[szname][i] = recall_empty()
     chars = defaultdict(recall_empty)
     gts = ground_truth.splitlines()
     prs = prediction.splitlines()
@@ -59,13 +58,12 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
                     return error('line {} prediction {} item {} is not a text'.format(i + 1, j + 1, k + 1))
             thisrc = {'recalls': {n: 1 if cgt['text'] in cpr[:n] else 0 for n in recall_n}, 'n': 1}
             longsize = max(cgt['size'])
-            for szname, range in size_ranges:
-                if range[0] <= longsize and longsize < range[1]:
-                    for prop in properties:
-                        if prop not in cgt['properties']:
-                            prop = '~{}'.format(prop)
-                        stat[szname][prop] = recall_add(stat[szname][prop], thisrc)
-                    stat[szname]['__all__'] = recall_add(stat[szname]['__all__'], thisrc)
+            for szname, rng in size_ranges:
+                if rng[0] <= longsize and longsize < rng[1]:
+                    k = 0
+                    for prop in cgt['properties']:
+                        k += 2 ** properties.index(prop)
+                    stat[szname][k] = recall_add(stat[szname][k], thisrc)
             chars[cgt['text']] = recall_add(chars[cgt['text']], thisrc)
     return {'error': 0, 'performance': stat, 'group_by_characters': chars}
 
