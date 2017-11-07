@@ -172,7 +172,7 @@ def crop_train_images():
             print('list val', i, '/', len(lines))
         valset += crop_once(line, False)
     with open(settings.VAL_LIST, 'w') as f:
-        for file_name in trainset:
+        for file_name in valset:
             f.write(file_name)
             f.write('\n')
     with open(settings.VAL_NAME_SIZE, 'w') as f:

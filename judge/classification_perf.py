@@ -9,6 +9,7 @@ import codecs
 import json
 import predictions2html
 import settings
+import six
 import sys
 
 from jinja2 import Template
@@ -26,6 +27,7 @@ def recall_print(recall, name):
 
 
 def main(model_names):
+    assert six.PY3
     with open(settings.TEST_CLASSIFICATION_GT) as f:
         gt = f.read()
     all = list()

@@ -39,7 +39,7 @@ def print_text(in_file_name, out_file_name, color, obj):
     args = [settings.PRINTTEXT_EXEC, in_file_name, out_file_name, color]
     print(*args)
     p = subprocess.Popen(args, stdin=subprocess.PIPE)
-    p.communicate('{}\n'.format(common_tools.to_jsonl(obj)))
+    p.communicate('{}\n'.format(common_tools.to_jsonl(obj)).encode())
     p.wait()
     assert 0 == p.returncode
 
