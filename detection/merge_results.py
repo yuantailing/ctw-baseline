@@ -10,7 +10,6 @@ import functools
 import json
 import os
 import settings
-import six
 import subprocess
 import sys
 
@@ -38,8 +37,8 @@ def read(test_det):
         file_paths.append(result_file_path)
     all = {o['image_id']: [] for o in test_det}
     imshape = (2048, 2048, 3)
-    removal = (1., 3.)
-    size_ranges = ((6., 128.), (24., float('inf')))
+    removal = (0., 0.)
+    size_ranges = ((float('-inf'), float('inf')), (32., float('inf')))
     levelmap = dict()
     for level_id, (cropratio, cropoverlap) in enumerate(settings.TEST_CROP_LEVELS):
         cropshape = (settings.TEST_IMAGE_SIZE // cropratio, settings.TEST_IMAGE_SIZE // cropratio)
@@ -125,14 +124,6 @@ def write(nms_sorted, test_det):
 
 
 def main():
-    if not six.PY3:
-        args = ['python3'] + sys.argv
-        print(*args)
-        p = subprocess.Popen(args, shell=False)
-        p.wait()
-        assert 0 == p.returncode
-        return
-
     with open(settings.DATA_LIST) as f:
         data_list = json.load(f)
     test_det = data_list['test_det']
