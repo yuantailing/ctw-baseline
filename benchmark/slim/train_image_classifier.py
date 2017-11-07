@@ -443,7 +443,7 @@ def main(_):
       images = tf.placeholder(tf.float32, shape=(FLAGS.batch_size, train_image_size, train_image_size, 3))
       labels = tf.placeholder(tf.float32, shape=(FLAGS.batch_size, dataset.num_classes))
       trainset.set_holders(images, labels)
-      logits, end_points = network_fn([image_preprocessing_fn(images[i], train_image_size, train_image_size) for i in range(FLAGS.batch_size)])
+      logits, end_points = network_fn(tf.concat([tf.expand_dims(image_preprocessing_fn(images[i], train_image_size, train_image_size), 0) for i in range(FLAGS.batch_size)], 0))
       logits = tf.squeeze(logits)
 
       #############################

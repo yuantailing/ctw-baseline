@@ -187,13 +187,11 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         dt = [(o['bbox'], o['text'], o['score']) for o in dt]
 
         gtobj = json.loads(gt)
-        for char in anno_tools.each_char(gtobj):
-            if char['is_chinese']:
-                charset.add(char['text'])
         ig = [(o['bbox'], None) for o in gtobj['ignore']]
         gt = []
         for char in anno_tools.each_char(gtobj):
             if char['is_chinese']:
+                charset.add(char['text'])
                 gt.append((char['adjusted_bbox'], char['text'], char['properties']))
             else:
                 ig.append((poly2bbox(char['polygon']), char['text']))
