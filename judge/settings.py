@@ -16,7 +16,7 @@ CLASSIFICATION_REPORT  = 'products/explore_cls.html'
 DETECTION_REPORT       = 'products/detection_report.json'
 PRINTTEXT_EXEC         = 'products/build-printtext-release/printtext'
 PRINTTEXT_DRAWING_DIR  = 'products/printtext-drawing'
-PROPS_SAMPLE_DIR       = 'products/props-sample'
+PROPS_SAMPLE_DIR       = 'products/props-samples'
 
 
 RECALL_N               = (1, 5)

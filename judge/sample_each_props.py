@@ -13,6 +13,7 @@ import random
 import settings
 import six
 
+from collections import defaultdict
 from pythonapi import anno_tools
 from six.moves import cPickle
 
@@ -21,7 +22,7 @@ def main():
     assert six.PY3
     random.seed(0)
 
-    belongs = {prop: [] for prop in settings.PROPERTIES}
+    belongs = defaultdict(list)
     with open(settings.TRAIN) as f:
         lines = f.read().splitlines()
     with open(settings.VAL) as f:
@@ -32,8 +33,11 @@ def main():
         for char in anno_tools.each_char(anno):
             if not char['is_chinese']:
                 continue
-            for prop in char['properties']:
-                belongs[prop].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
+            for prop in settings.PROPERTIES:
+                if prop in char['properties']:
+                    belongs[prop].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
+                else:
+                    belongs['not-{}'.format(prop)].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
             i += 1
 
     for prop, imgset in sorted(belongs.items()):
