@@ -30,7 +30,7 @@ def get_allowed_filename():
                     pre = md52old[md5][0] + ','
                 md52old[md5] = (pre + folder, filename[:-4])
     for folder in ['train', 'test', 'other', 'nosign']:
-        counts = defaultdict(lambda: 0)
+        counts = defaultdict(int)
         with open(os.path.join('md5sum_match', 'traffic_md5sum_{}.txt'.format(folder))) as f:
             for line in f:
                 md5, filename = line.split()

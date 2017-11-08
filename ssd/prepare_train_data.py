@@ -10,7 +10,9 @@ import darknet_tools
 import json
 import numpy as np
 import os
+import random
 import settings
+import six
 import subprocess
 import xml.dom.minidom
 
@@ -155,6 +157,7 @@ def crop_train_images():
         crop_once(*args)
     common_tools.multithreaded(foo, [(line, True) for line in lines], num_thread=4)
     trainset = []
+    random.shuffle(trainset)
     for i, line in enumerate(lines):
         if i % 1000 == 0:
             print('list trainval', i, '/', len(lines))
@@ -171,6 +174,7 @@ def crop_train_images():
         if i % 1000 == 0:
             print('list val', i, '/', len(lines))
         valset += crop_once(line, False)
+    random.shuffle(valset)
     with open(settings.VAL_LIST, 'w') as f:
         for file_name in valset:
             f.write(file_name)
@@ -235,7 +239,10 @@ def create_lmdb():
 
 
 def main():
+    assert six.PY3
     assert os.path.isfile(os.path.join(settings.CAFFE_ROOT, 'python', 'caffe', '_caffe.so')), 'please compile pycaffe'
+    random.seed(0)
+
     crop_train_images()
     write_caffe_labelmap()
     create_lmdb()

@@ -25,6 +25,7 @@ def main():
     else:
         env['PYTHONPATH'] = '{}:{}'.format('.', pythonpath)
 
+    print(*args)
     p = subprocess.Popen(args, env=env)
     p.wait()
     assert 0 == p.returncode

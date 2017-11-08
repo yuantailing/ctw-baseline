@@ -18,24 +18,13 @@ from pythonapi import common_tools, eval_tools
 from six.moves import cPickle
 
 
-def clear_caches():
-    for file_path in caches.values():
-        if os.path.isfile(file_path):
-            os.unlink(file_path)
-
-
-def read(test_det):
-    with open(settings.DATA_LIST) as f:
-        data_list = json.load(f)
-    test_det = data_list['test_det']
-
+def read():
     file_paths = []
-    pkl_is_newer = True
     for split_id in range(settings.TEST_SPLIT_NUM):
         darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
         result_file_path = os.path.join(settings.DARKNET_RESULTS_DIR, '{}.txt'.format(darknet_results_out))
         file_paths.append(result_file_path)
-    all = {o['image_id']: [] for o in test_det}
+    all = defaultdict(list)
     imshape = (2048, 2048, 3)
     removal = (0., 0.)
     size_ranges = ((float('-inf'), float('inf')), (32., float('inf')))
@@ -58,7 +47,7 @@ def read(test_det):
         one = []
         for line in lines:
             file_path, cate_id, x, y, w, h, prob = line.split()
-            image_id, level_id, crop_name = os.path.splitext(os.path.basename(file_path))[0].split('_', maxsplit=2)
+            image_id, level_id, crop_name = os.path.splitext(os.path.basename(file_path))[0].split('_', 2)
             level_id = int(level_id)
             cx, cy, cw, ch = levelmap[level_id, crop_name]
             cate_id = int(cate_id)
@@ -80,13 +69,13 @@ def read(test_det):
 
 
 def do_nms_sort(unmerged, nms):
-    all = dict()
+    all = defaultdict(list)
     i_time = 0
     for image_id, proposals in unmerged.items():
         if i_time % 200 == 0:
             print('nms sort', i_time, '/', len(unmerged))
         i_time += 1
-        cates = defaultdict(lambda: [])
+        cates = defaultdict(list)
         for proposal in proposals:
             cates[proposal['cate_id']].append(proposal)
         for cate_id, proposal in cates.items():
@@ -103,9 +92,13 @@ def do_nms_sort(unmerged, nms):
     return all
 
 
-def write(nms_sorted, test_det):
+def write(nms_sorted):
     with open(settings.CATES) as f:
         cates = json.load(f)
+
+    with open(settings.DATA_LIST) as f:
+        data_list = json.load(f)
+    test_det = data_list['test_det']
 
     with open(os.path.join(settings.PRODUCTS_ROOT, 'detections.jsonl'), 'w') as f:
         for o in test_det:
@@ -124,18 +117,15 @@ def write(nms_sorted, test_det):
 
 
 def main():
-    with open(settings.DATA_LIST) as f:
-        data_list = json.load(f)
-    test_det = data_list['test_det']
 
     print('loading darknet outputs')
-    unmerged = read(test_det)
+    unmerged = read()
 
     print('doing nms sort')
     nms_sorted = do_nms_sort(unmerged, .5)
 
     print('writing results')
-    write(nms_sorted, test_det)
+    write(nms_sorted)
 
 
 if __name__ == '__main__':

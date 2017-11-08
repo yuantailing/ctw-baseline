@@ -14,7 +14,7 @@ from pythonapi import anno_tools
 
 
 def main():
-    counts = defaultdict(lambda: 0)
+    counts = defaultdict(int)
     with open(settings.TRAIN) as f, open(settings.VAL) as f2:
         for line in f.read().splitlines() + f2.read().splitlines():
             anno = json.loads(line.strip())
