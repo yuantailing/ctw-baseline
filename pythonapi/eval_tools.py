@@ -24,10 +24,12 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
 
     stat = dict()
     for szname, _ in size_ranges:
-        stat[szname] = dict()
+        stat[szname] = {
+            'properties': dict(),
+            'texts': defaultdict(recall_empty),
+        }
         for i in range(2 ** len(properties)):
-            stat[szname][i] = recall_empty()
-    chars = defaultdict(recall_empty)
+            stat[szname]['properties'][i] = recall_empty()
     gts = ground_truth.splitlines()
     prs = prediction.splitlines()
     if len(gts) != len(prs):
@@ -63,9 +65,11 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
                     k = 0
                     for prop in cgt['properties']:
                         k += 2 ** properties.index(prop)
-                    stat[szname][k] = recall_add(stat[szname][k], thisrc)
-            chars[cgt['text']] = recall_add(chars[cgt['text']], thisrc)
-    return {'error': 0, 'performance': stat, 'group_by_characters': chars}
+                    stat[szname]['properties'][k] = recall_add(stat[szname]['properties'][k], thisrc)
+                stat[szname]['texts'][cgt['text']] = recall_add(stat[szname]['texts'][cgt['text']], thisrc)
+    for szname, _ in size_ranges:
+        stat[szname]['texts'] = dict(stat[szname]['texts'])
+    return {'error': 0, 'performance': stat}
 
 
 def iou(bbox_0, bbox_1):  # bbox is represented as (x, y, w, h)

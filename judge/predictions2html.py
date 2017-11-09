@@ -32,6 +32,14 @@ cfgs = [
         'model_name': 'inception_v4',
         'display_name': 'Inception',
     },
+    {
+        'model_name': 'resnet_v2_50',
+        'display_name': 'ResNet50',
+    },
+    {
+        'model_name': 'resnet_v2_152',
+        'display_name': 'ResNet152',
+    },
 ]
 
 for cfg in cfgs:

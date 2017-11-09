@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import codecs
+import copy
 import json
 import predictions2html
 import settings
@@ -26,13 +27,11 @@ def recall_print(recall, name):
     print('n={}'.format(recall['n']))
 
 
-def main(model_names):
-    assert six.PY3
+def main():
     with open(settings.TEST_CLASSIFICATION_GT) as f:
         gt = f.read()
     all = list()
-    for model_name in model_names:
-        model = list(filter(lambda o: o['model_name'] == model_name, predictions2html.cfgs))[0]
+    for model in predictions2html.cfgs:
         with open(model['predictions_file_path']) as f:
             pr = f.read()
         report = eval_tools.classification_recall(
@@ -41,14 +40,19 @@ def main(model_names):
         )
         assert 0 == report['error'], report['msg']
         all.append({
-            'model_name': model_name,
-            'report': report,
+            'model_name': model['model_name'],
+            'performance': report['performance'],
         })
+
     with open('explore_cls.template.html') as f:
         template = Template(f.read())
+    jdata = copy.deepcopy(all)
+    for model in jdata:
+        for _, szperf in model['performance'].items():
+            del szperf['texts']
     with codecs.open(settings.CLASSIFICATION_REPORT, 'w', 'utf-8') as f:
         f.write(template.render({
-            'report_all': json.dumps(all, ensure_ascii=False, sort_keys=True, indent='\t'),
+            'performance_all': json.dumps(jdata, sort_keys=True),
             'properties': settings.PROPERTIES,
         }))
 
@@ -60,25 +64,24 @@ def main(model_names):
 
     for report_obj in all:
         print('[', report_obj['model_name'], ']')
-        report = report_obj['report']
+        performance = report_obj['performance']
         for szname, _ in sorted(settings.SIZE_RANGES):
             name = '{:12s} & {:12s}'.format(szname, '__all__')
             recall = recall_empty()
-            for k, v in report['performance'][szname].items():
+            for k, v in performance[szname]['properties'].items():
                 recall = recall_add(recall, v)
             recall_print(recall, name)
         for i, prop in enumerate(settings.PROPERTIES):
             for szname, _ in sorted(settings.SIZE_RANGES):
                 name = '{:12s} & {:12s}'.format(szname, prop)
                 recall = recall_empty()
-                for k, v in report['performance'][szname].items():
+                for k, v in performance[szname]['properties'].items():
                     if int(k) & 2 ** i:
                         recall = recall_add(recall, v)
                 recall_print(recall, name)
-        for char, recall in sorted(report['group_by_characters'].items(), key=lambda o: -o[1]['n'])[:10]:
+        for char, recall in sorted(performance['__all__']['texts'].items(), key=lambda o: -o[1]['n'])[:10]:
             recall_print(recall, char)
 
 
 if __name__ == '__main__':
-    assert 1 < len(sys.argv)
-    main(sys.argv[1:])
+    main()

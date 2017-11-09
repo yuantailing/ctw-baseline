@@ -36,7 +36,7 @@
 		</div>
 	</div>
 	<script>
-var data = {{ report_all }};
+var data = {{ performance_all }};
 var properties = {{ properties }};
 
 $(document).ready(function() {
@@ -59,11 +59,10 @@ $(document).ready(function() {
 		var recall_n = document.getElementById('recall-at-1').checked ? 1 : 5;
 		all_models = [];
 		$.map(data, function(model) {
-			console.assert(0 == model.report.error);
 			model_rc = [];
-			$.each(model.report.performance, function(szname, prop_rcs) {
+			$.each(model.performance, function(szname, prop_rcs) {
 				var sz_rc = recall_empty();
-				$.each(prop_rcs, function(id, rcs) {
+				$.each(prop_rcs.properties, function(id, rcs) {
 					var ok = true;
 					$.map(excepts, function(ex) {
 						if (ex.contains) {
