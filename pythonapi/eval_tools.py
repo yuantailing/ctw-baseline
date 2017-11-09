@@ -184,7 +184,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 return error('line {} detection {} bbox w or h <= 0'.format(i + 1, j + 1))
 
         dt.sort(key=lambda o: (-o['score'], o['bbox'], o['text']))
-        dt = [(o['bbox'], o['text'], o['score']) for o in dt]
+        dt = [(o['bbox'], o['text'], o['score']) for o in dt if o['text']]
 
         gtobj = json.loads(gt)
         ig = [(o['bbox'], None) for o in gtobj['ignore']]

@@ -19,6 +19,7 @@ def main():
     most_freq = defaultdict(lambda: {'trainval': 0, 'test': 0})
     num_char = defaultdict(lambda: {'trainval': 0, 'test': 0})
     num_uniq_char = defaultdict(lambda: {'trainval': 0, 'test': 0})
+    num_image = {'trainval': 0, 'test': 0}
     sum_chinese = {'trainval': 0, 'test': 0}
     sum_not_chinese = {'trainval': 0, 'test': 0}
     sum_ignore = {'trainval': 0, 'test': 0}
@@ -38,6 +39,7 @@ def main():
             assert 0 < len(uniq)
             num_char[num]['trainval'] += 1
             num_uniq_char[len(uniq)]['trainval'] += 1
+            num_image['trainval'] += 1
             sum_ignore['trainval'] += len(anno['ignore'])
     with open(settings.TEST_CLASSIFICATION_GT) as f:
         for line in f:
@@ -52,6 +54,7 @@ def main():
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
             num_uniq_char[num]['test'] += 1
+            num_image['test'] += 1
     with open(settings.TEST_DETECTION_GT) as f:
         for line in f:
             anno = json.loads(line.strip())
@@ -68,6 +71,7 @@ def main():
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
             num_uniq_char[len(uniq)]['test'] += 1
+            num_image['test'] += 1
             sum_ignore['test'] += len(anno['ignore'])
     most_freq = [{
         'text': k,
@@ -85,6 +89,8 @@ def main():
     for i in range(1, 61):
         print(i, num_uniq_char[i]['trainval'], num_uniq_char[i]['test'])
     print('over_all')
+    print('uniq_chinese', len(most_freq))
+    print('num_image', num_image['trainval'], num_image['test'])
     print('sum_chinese', sum_chinese['trainval'], sum_chinese['test'])
     print('sum_not_chinese', sum_not_chinese['trainval'], sum_not_chinese['test'])
     print('sum_ignore', sum_ignore['trainval'], sum_ignore['test'])
