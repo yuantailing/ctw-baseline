@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import codecs
 import copy
 import json
+import os
 import predictions2html
 import settings
 import six
@@ -15,6 +16,7 @@ import sys
 
 from jinja2 import Template
 from pythonapi import eval_tools
+from six.moves import urllib
 
 
 def recall_print(recall, name):
@@ -44,6 +46,14 @@ def main():
             'performance': report['performance'],
         })
 
+    chartjs_file_path = os.path.join(settings.PRODUCTS_ROOT, 'Chart.min.js');
+    if not os.path.isfile(chartjs_file_path):
+        urllib.request.urlretrieve(
+            'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js',
+            chartjs_file_path
+        )
+    with open(chartjs_file_path) as f:
+        chartjs = f.read()
     with open('explore_cls.template.html') as f:
         template = Template(f.read())
     jdata = copy.deepcopy(all)
@@ -52,6 +62,7 @@ def main():
             del szperf['texts']
     with codecs.open(settings.CLASSIFICATION_REPORT, 'w', 'utf-8') as f:
         f.write(template.render({
+            'chartjs': chartjs,
             'performance_all': json.dumps(jdata, sort_keys=True),
             'properties': settings.PROPERTIES,
         }))

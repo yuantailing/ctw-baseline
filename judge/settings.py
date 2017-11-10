@@ -26,7 +26,7 @@ SIZE_RANGES            = [
     ('large(>=32)', (32., float('inf'))),
 ]
 PROPERTIES             = [
-    'covered',
+    'occluded',
     'bgcomplex',
     'distorted',
     'raised',
