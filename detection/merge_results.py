@@ -88,7 +88,7 @@ def do_nms_sort(unmerged, nms):
                 if covered <= nms:
                     na.append(o)
             cates[cate_id] = na
-        all[image_id] = functools.reduce(lambda a, b: a + b, cates.values(), [])
+        all[image_id] = common_tools.reduce_sum(cates.values())
     return all
 
 

@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import base64
 import json
+import operator
 import os
 import math
 import numpy as np
@@ -147,7 +148,7 @@ def main(models, n):
         rows.append(row)
     with open(settings.PREDICTIONS_HTML, 'w') as f:
         f.write(template.render({
-            'models': list(map(lambda o: o['display_name'], models)),
+            'models': list(map(operator.itemgetter('display_name'), models)),
             'rows': rows,
         }))
 

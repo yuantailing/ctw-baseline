@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import functools
 import json
+import operator
 import os
 import threading
 
@@ -40,8 +41,8 @@ def exists_and_newer(subj, obj, strict=False):
     return newer(os.stat(subj).st_mtime, os.stat(obj).st_mtime)
 
 
-def reduce_sum(*args):
-    return functools.reduce(lambda a, b: a + b, *args)
+def reduce_sum(*args, **kwargs):
+    return functools.reduce(operator.add, *args, **kwargs)
 
 
 def multithreaded_tid(func, args_list, num_thread, logfunc=None):

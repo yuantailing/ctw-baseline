@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import imp
 import math
+import operator
 import os
 import re
 import settings
@@ -44,7 +45,7 @@ def last_backup(backup_root):
             if m:
                 i = int(m.group(1))
                 all.append((filepath, i))
-    return max(all, key=lambda t: t[1])[0]
+    return max(all, key=operator.itemgetter(1))[0]
 
 
 def get_crop_bboxes(imshape, cropshape, cropoverlap):
