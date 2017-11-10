@@ -157,11 +157,11 @@ def crop_train_images():
         crop_once(*args)
     common_tools.multithreaded(foo, [(line, True) for line in lines], num_thread=4)
     trainset = []
-    random.shuffle(trainset)
     for i, line in enumerate(lines):
         if i % 1000 == 0:
             print('list trainval', i, '/', len(lines))
         trainset += crop_once(line, False)
+    random.shuffle(trainset)
     with open(settings.TRAINVAL_LIST, 'w') as f:
         for file_name in trainset:
             f.write(file_name)
