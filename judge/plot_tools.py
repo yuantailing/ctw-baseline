@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
 
-def draw_bar(data, labels, width=None, xticks_font_fname=None, legend_mode=None, legend_bbox_to_anchor=None):
+def draw_bar(data, labels, width=None, xticks_font_fname=None, legend_kwargs=dict()):
     n = len(labels)
     m = len(data)
     if not width:
@@ -29,4 +29,4 @@ def draw_bar(data, labels, width=None, xticks_font_fname=None, legend_mode=None,
     labels = [label for label in labels if label is not None]
     font = FontProperties(fname=xticks_font_fname)
     plt.xticks(ind, labels, fontproperties=font, ha='center')
-    plt.legend(legend_bar, legend_text, mode=legend_mode, bbox_to_anchor=legend_bbox_to_anchor)
+    plt.legend(legend_bar, legend_text, **legend_kwargs)

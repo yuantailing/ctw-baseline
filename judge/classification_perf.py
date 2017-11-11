@@ -112,16 +112,17 @@ def draw_by_models(all):
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
-    labels = [model['model_name'] for model in all]
+    labels = [list(filter(lambda o: o['model_name'] == model['model_name'], predictions2html.cfgs))[0]['display_name'] for model in all]
     with plt.style.context({
-        'figure.subplot.left': .06,
-        'figure.subplot.right': .86,
+        'figure.subplot.left': .10,
+        'figure.subplot.right': .96,
         'figure.subplot.top': .96,
+        'legend.loc': 'upper center',
     }):
-        plt.figure(figsize=(10, 3))
+        plt.figure(figsize=(6, 3))
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
-        plot_tools.draw_bar(data, labels, width=.18, legend_mode='expand', legend_bbox_to_anchor=(1, .6, .16, .4))
+        plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
         plt.ylabel('Precision')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_model_size.svg'))
         plt.close()
@@ -129,9 +130,10 @@ def draw_by_models(all):
 
 def draw_by_props(model_name, performance):
     def prop_recall(prop_perfs, prop_id):
+        m = len(settings.PROPERTIES)
         n = rc = 0
         for k, o in enumerate(prop_perfs):
-            if prop_id == -1 or int(k) & 2 ** prop_id:
+            if prop_id == -1 or (prop_id < m and 0 != int(k) & 2 ** prop_id) or (m <= prop_id and 0 == int(k) & 2 ** (prop_id - m)):
                 n += o['n']
                 rc += o['recalls'][1]
         return 0. if n == 0 else rc / n
@@ -140,20 +142,22 @@ def draw_by_props(model_name, performance):
         [
             {
                 'legend': szname,
-                'data': [prop_recall(performance[szname]['properties'], i) for i in range(-1, len(settings.PROPERTIES))],
+                'data': [prop_recall(performance[szname]['properties'], i) for i in range(-1, 2 * len(settings.PROPERTIES))],
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
-    labels = ['all'] + settings.PROPERTIES
+    labels = ['all'] + settings.PROPERTIES + list(map('~{}'.format, settings.PROPERTIES))
     with plt.style.context({
-        'figure.subplot.left': .06,
-        'figure.subplot.right': .86,
+        'figure.subplot.left': .05,
+        'figure.subplot.right': .98,
         'figure.subplot.top': .96,
+        'legend.loc': 'upper center',
     }):
-        plt.figure(figsize=(10, 3))
+        plt.figure(figsize=(12, 3))
+        plt.xlim((.3, .7 + len(labels)))
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
-        plot_tools.draw_bar(data, labels, width=.18, legend_mode='expand', legend_bbox_to_anchor=(1, .6, .16, .4))
+        plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
         plt.ylabel('Precision')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_props_size_{}.svg'.format(model_name)))
         plt.close()
