@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import settings
 
+from classification_perf import get_chartjs
+from jinja2 import Template
 from pythonapi import eval_tools
 
 
@@ -21,12 +23,36 @@ def main(dt_file_path):
         dt = f.read()
     report = eval_tools.detection_mAP(
         gt, dt,
-        settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH
+        settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH,
+        echo=True
     )
     assert 0 == report['error'], report['msg']
     with codecs.open(settings.DETECTION_REPORT, 'w', 'utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=2, sort_keys=True)
+    html_explore(report)
     show(report)
+
+
+def html_explore(report):
+    jdata = [{
+        'model_name': 'YOLO_v2',
+        'performance': {
+            szname: {
+                'properties': {
+                    k: {'n': v['n'], 'recalls': {1: v['recall']}} for k, v in szprop['properties'].items()
+                },
+            } for szname, szprop in report['performance'].items()
+        },
+    }]
+    with open('explore_cls.template.html') as f:
+        template = Template(f.read())
+    with codecs.open(settings.DETECTION_EXPLORE, 'w', 'utf-8') as f:
+        f.write(template.render({
+            'title': 'Explore detection performance',
+            'chartjs': get_chartjs(),
+            'performance_all': json.dumps(jdata, sort_keys=True),
+            'properties': settings.PROPERTIES,
+        }))
 
 
 def show(report):
@@ -44,9 +70,15 @@ def show(report):
             if isinstance(x, float):
                 x = percentage(x)
             print('{:>4s}'.format(k), '=', x)
-        for prop, recall in sorted(stat['properties'].items()):
-            r = 0. if recall['n'] == 0 else recall['recall'] / recall['n']
-            print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(recall['n']), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
+        for i, prop in zip(range(-1, len(settings.PROPERTIES)), ['__all__'] + settings.PROPERTIES):
+            n = 0
+            rc = 0
+            for k, v in performance[szname]['properties'].items():
+                if i == -1 or int(k) & 2 ** i:
+                    n += v['n']
+                    rc += v['recall']
+            r = 0. if n == 0 else rc / n
+            print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
         print()
         y = [1.] + stat['curve'] + [0.] * (stat['n'] - len(stat['curve']))
         x = np.linspace(0, 1, len(y))
