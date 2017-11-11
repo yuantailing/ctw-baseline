@@ -7,15 +7,18 @@ from __future__ import unicode_literals
 
 import codecs
 import json
+import matplotlib.pyplot as plt
+import os
+import plot_tools
 import settings
 import six
 
 from collections import defaultdict
 from pythonapi import anno_tools
+from six.moves import urllib
 
 
 def main():
-    assert six.PY3
     most_freq = defaultdict(lambda: {'trainval': 0, 'test': 0})
     num_char = defaultdict(lambda: {'trainval': 0, 'test': 0})
     num_uniq_char = defaultdict(lambda: {'trainval': 0, 'test': 0})
@@ -94,6 +97,97 @@ def main():
     print('sum_chinese', sum_chinese['trainval'], sum_chinese['test'])
     print('sum_not_chinese', sum_not_chinese['trainval'], sum_not_chinese['test'])
     print('sum_ignore', sum_ignore['trainval'], sum_ignore['test'])
+
+    if not os.path.isdir(settings.PLOTS_DIR):
+        os.makedirs(settings.PLOTS_DIR)
+    chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')
+    if not os.path.isfile(chinese_ttf):
+        urllib.request.urlretrieve('http://fonts.cooltext.com/Downloader.aspx?ID=11120',
+                                   chinese_ttf)
+
+    # most_freq
+    meta = most_freq[:50]
+    data = [
+        [
+            {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
+                'color': '#ED7D31',
+            }, {
+                'legend': 'training set',
+                'data': [o['trainval'] for o in meta],
+                'color': '#5B9BD5',
+            },
+        ],
+    ]
+    labels = [o['text'] for o in meta]
+    with plt.style.context({
+        'figure.subplot.left': '0.06',
+        'figure.subplot.right': '0.98',
+        'figure.subplot.top': '0.96',
+    }):
+        plt.figure(figsize=(10,3))
+        plt.xlim((0, len(meta) + 1))
+        plot_tools.draw_bar(data, labels, xticks_font_file=chinese_ttf)
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.svg'), dpi=500)
+
+    # num_char
+    meta = [num_char[i] for i in range(1, 61)]
+    data = [
+        [
+            {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
+                'color': '#ED7D31',
+            }, {
+                'legend': 'training set',
+                'data': [o['trainval'] for o in meta],
+                'color': '#5B9BD5',
+            },
+        ],
+    ]
+    labels = [i + 1 if (i + 1) % 10 == 0 else None for i, _ in enumerate(meta)]
+    with plt.style.context({
+        'figure.subplot.left': '0.14',
+        'figure.subplot.right': '0.96',
+        'figure.subplot.bottom': '0.16',
+        'figure.subplot.top': '0.96',
+    }):
+        plt.figure(figsize=(5,3))
+        plt.xlim((0, len(meta) + 1))
+        plot_tools.draw_bar(data, labels)
+        plt.xlabel('total number of characters in each image')
+        plt.ylabel('number of images')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_char.svg'))
+
+    # num_uniq_char
+    meta = [num_uniq_char[i] for i in range(1, 61)]
+    data = [
+        [
+            {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
+                'color': '#ED7D31',
+            }, {
+                'legend': 'training set',
+                'data': [o['trainval'] for o in meta],
+                'color': '#5B9BD5',
+            },
+        ],
+    ]
+    labels = [i + 1 if (i + 1) % 10 == 0 else None for i, _ in enumerate(meta)]
+    with plt.style.context({
+        'figure.subplot.left': '0.14',
+        'figure.subplot.right': '0.96',
+        'figure.subplot.bottom': '0.16',
+        'figure.subplot.top': '0.96',
+    }):
+        plt.figure(figsize=(5,3))
+        plt.xlim((0, len(meta) + 1))
+        plot_tools.draw_bar(data, labels)
+        plt.xlabel('number of different characters in each image')
+        plt.ylabel('number of images')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_uniq_char.svg'))
 
 
 if __name__ == '__main__':

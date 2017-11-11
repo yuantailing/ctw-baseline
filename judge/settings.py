@@ -16,6 +16,7 @@ DETECTION_REPORT       = 'products/detection_report.json'
 PRINTTEXT_EXEC         = 'products/build-printtext-release/printtext'
 PRINTTEXT_DRAWING_DIR  = 'products/printtext-drawing'
 PROPS_SAMPLE_DIR       = 'products/props-samples'
+PLOTS_DIR              = 'products/plots'
 
 
 RECALL_N               = (1, 5)
