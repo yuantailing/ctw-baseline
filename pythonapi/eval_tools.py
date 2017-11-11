@@ -25,11 +25,9 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
     stat = dict()
     for szname, _ in size_ranges:
         stat[szname] = {
-            'properties': dict(),
+            'properties': [recall_empty() for _ in range(2 ** len(properties))],
             'texts': defaultdict(recall_empty),
         }
-        for i in range(2 ** len(properties)):
-            stat[szname]['properties'][i] = recall_empty()
     gts = ground_truth.splitlines()
     prs = prediction.splitlines()
     if len(gts) != len(prs):
@@ -95,7 +93,7 @@ def a_in_b(bbox_0, bbox_1):
     return AN / A0
 
 
-def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh):
+def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh, echo=False):
     def error(s):
         return {'error': 1, 'msg': s}
 
@@ -110,7 +108,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         return [xmin, ymin, xmax - xmin, ymax - ymin]
 
     def AP_empty():
-        return {'n': 0, 'detections': [], 'properties': {prop: {'n': 0, 'recall': 0} for prop in props_all}}
+        return {'n': 0, 'detections': [], 'properties': [{'n': 0, 'recall': 0} for _ in range(2 ** len(properties))]}
 
     def AP_compute(m):
         if 0 == m['n']:
@@ -136,7 +134,6 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 curve.append(a)
         return AP / m['n'], curve
 
-    props_all = properties + ['__all__']
     charset = set()
     m = dict()
     for szname, _ in size_ranges:
@@ -148,7 +145,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         return error('number of lines not match')
 
     for i, (gt, dt) in enumerate(zip(gts, dts)):
-        if i % 200 == 0:
+        if echo and i % 200 == 0:
             print(i, '/', len(gts))
 
         try:
@@ -236,26 +233,26 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 if taken != 2:
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
+                    k = 0
                     for prop in gtchar[2]:
-                        thism['properties'][prop]['n'] += 1
-                        thism['properties'][prop]['recall'] += taken
-                    thism['properties']['__all__']['n'] += 1
-                    thism['properties']['__all__']['recall'] += taken
+                        k += 2 ** properties.index(prop)
+                    thism['properties'][k]['n'] += 1
+                    thism['properties'][k]['recall'] += taken
 
     performance = dict()
     for szname, _ in size_ranges:
         n = 0
         mAP = 0.
-        properties = {prop: {'n': 0, 'recall': 0} for prop in props_all}
+        szprops = AP_empty()['properties']
         texts = {c: 0. for c in charset}
         stat_all = AP_empty()
         for text, stat in m[szname].items():
             n += stat['n']
             AP, _ = AP_compute(stat)
             mAP += AP * stat['n']
-            for prop in props_all:
-                properties[prop]['n'] += stat['properties'][prop]['n']
-                properties[prop]['recall'] += stat['properties'][prop]['recall']
+            for k, o in enumerate(szprops):
+                o['n'] += stat['properties'][k]['n']
+                o['recall'] += stat['properties'][k]['recall']
             if text in charset:
                 texts[text] = AP
             stat_all['n'] += stat['n']
@@ -265,7 +262,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         performance[szname] = {
             'n': n,
             'mAP': mAP / n,
-            'properties': properties,
+            'properties': szprops,
             'texts': texts,
             'AP': AP_all,
             'curve': curve,

@@ -38,9 +38,9 @@ def html_explore(report):
         'model_name': 'YOLO_v2',
         'performance': {
             szname: {
-                'properties': {
-                    k: {'n': v['n'], 'recalls': {1: v['recall']}} for k, v in szprop['properties'].items()
-                },
+                'properties': [
+                    {'n': o['n'], 'recalls': {1: o['recall']}} for o in szprop['properties']
+                ],
             } for szname, szprop in report['performance'].items()
         },
     }]
@@ -73,10 +73,10 @@ def show(report):
         for i, prop in zip(range(-1, len(settings.PROPERTIES)), ['__all__'] + settings.PROPERTIES):
             n = 0
             rc = 0
-            for k, v in performance[szname]['properties'].items():
+            for k, o in enumerate(performance[szname]['properties']):
                 if i == -1 or int(k) & 2 ** i:
-                    n += v['n']
-                    rc += v['recall']
+                    n += o['n']
+                    rc += o['recall']
             r = 0. if n == 0 else rc / n
             print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
         print()
