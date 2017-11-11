@@ -22,10 +22,10 @@ PLOTS_DIR              = 'products/plots'
 
 RECALL_N               = (1, 5)
 SIZE_RANGES            = [
-    ('__all__', (0., float('inf'))),
-    ('small(<16)', (0., 16.)),
+    ('all', (0., float('inf'))),
+    ('large', (32., float('inf'))),
     ('medium', (16., 32.)),
-    ('large(>=32)', (32., float('inf'))),
+    ('small', (0., 16.)),
 ]
 PROPERTIES             = [
     'occluded',

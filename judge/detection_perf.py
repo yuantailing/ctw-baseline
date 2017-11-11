@@ -9,6 +9,8 @@ import codecs
 import json
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import plot_tools
 import settings
 
 from classification_perf import get_chartjs
@@ -31,6 +33,7 @@ def main(dt_file_path):
         json.dump(report, f, ensure_ascii=False, indent=2, sort_keys=True)
     html_explore(report)
     show(report)
+    draw(report)
 
 
 def html_explore(report):
@@ -80,11 +83,59 @@ def show(report):
             r = 0. if n == 0 else rc / n
             print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
         print()
-        y = [1.] + stat['curve'] + [0.] * (stat['n'] - len(stat['curve']))
-        x = np.linspace(0, 1, len(y))
-        plt.plot(x, y, label=szname.replace('_', ''))
-    plt.legend()
-    plt.show()
+
+
+def draw(report):
+    def prop_recall(prop_perfs, prop_id):
+        n = rc = 0
+        for k, o in enumerate(prop_perfs):
+            if prop_id == -1 or int(k) & 2 ** prop_id:
+                n += o['n']
+                rc += o['recall']
+        return 0. if n == 0 else rc / n
+
+    data = [
+        [
+            {
+                'legend': szname,
+                'data': [prop_recall(report['performance'][szname]['properties'], i) for i in range(-1, len(settings.PROPERTIES))],
+            }
+        ] for szname, _ in settings.SIZE_RANGES
+    ]
+    labels = ['all'] + settings.PROPERTIES
+    with plt.style.context({
+        'figure.subplot.left': .06,
+        'figure.subplot.right': .84,
+        'figure.subplot.top': .96,
+    }):
+        plt.figure(figsize=(10, 3))
+        plt.ylim((0., 1.))
+        plt.grid(which='major', axis='y', linestyle='dotted')
+        plot_tools.draw_bar(data, labels, width=.18, legend_bbox_to_anchor=(1., 1.))
+        plt.ylabel('Recall')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'det_recall_by_props_size.svg'))
+        plt.close()
+
+    with plt.style.context({
+        'figure.subplot.left': .14,
+        'figure.subplot.right': .96,
+        'figure.subplot.bottom': .12,
+        'figure.subplot.top': .94,
+        'legend.loc': 'upper right',
+    }):
+        plt.figure(figsize=(5.5, 5.5))
+        plt.xlim((0., 1.))
+        plt.ylim((0., 1.))
+        plt.grid(which='major', axis='both', linestyle='dotted')
+        for szname, stat in sorted(report['performance'].items()):
+            y = [1.] + stat['curve'] + [0.] * (stat['n'] - len(stat['curve']))
+            x = np.linspace(0, 1, len(y))
+            plt.plot(x, y, label=szname)
+        plt.legend()
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'det_AP_curve.svg'))
+        plt.close()
 
 
 if __name__ == '__main__':
