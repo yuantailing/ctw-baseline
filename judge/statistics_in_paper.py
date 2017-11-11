@@ -110,11 +110,11 @@ def main():
     data = [
         [
             {
-                'legend': 'testing set',
-                'data': [o['test'] for o in meta],
-            }, {
                 'legend': 'training set',
                 'data': [o['trainval'] for o in meta],
+            }, {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
             },
         ],
     ]
@@ -135,11 +135,11 @@ def main():
     data = [
         [
             {
-                'legend': 'testing set',
-                'data': [o['test'] for o in meta],
-            }, {
                 'legend': 'training set',
                 'data': [o['trainval'] for o in meta],
+            }, {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
             },
         ],
     ]
@@ -163,11 +163,11 @@ def main():
     data = [
         [
             {
-                'legend': 'testing set',
-                'data': [o['test'] for o in meta],
-            }, {
                 'legend': 'training set',
                 'data': [o['trainval'] for o in meta],
+            }, {
+                'legend': 'testing set',
+                'data': [o['test'] for o in meta],
             },
         ],
     ]
