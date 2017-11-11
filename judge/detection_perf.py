@@ -105,13 +105,13 @@ def draw(report):
     labels = ['all'] + settings.PROPERTIES
     with plt.style.context({
         'figure.subplot.left': .06,
-        'figure.subplot.right': .84,
+        'figure.subplot.right': .86,
         'figure.subplot.top': .96,
     }):
         plt.figure(figsize=(10, 3))
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
-        plot_tools.draw_bar(data, labels, width=.18, legend_bbox_to_anchor=(1., 1.))
+        plot_tools.draw_bar(data, labels, width=.18, legend_mode='expand', legend_bbox_to_anchor=(1, .6, .16, .4))
         plt.ylabel('Recall')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'det_recall_by_props_size.svg'))
         plt.close()

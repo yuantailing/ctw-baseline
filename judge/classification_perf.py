@@ -8,11 +8,12 @@ from __future__ import unicode_literals
 import codecs
 import copy
 import json
+import matplotlib.pyplot as plt
 import os
+import plot_tools
 import predictions2html
 import settings
 import six
-import sys
 
 from jinja2 import Template
 from pythonapi import eval_tools
@@ -88,8 +89,74 @@ def main():
                     if i == -1 or int(k) & 2 ** i:
                         recall = recall_add(recall, o)
                 recall_print(recall, name)
-        for char, recall in sorted(performance['__all__']['texts'].items(), key=lambda o: -o[1]['n'])[:10]:
+        for char, recall in sorted(performance['all']['texts'].items(), key=lambda o: -o[1]['n'])[:10]:
             recall_print(recall, char)
+
+    draw_by_models(all)
+    for report_obj in all:
+        draw_by_props(**report_obj)
+
+
+def draw_by_models(all):
+    def model_recall(prop_perfs):
+        n = rc = 0
+        for k, o in enumerate(prop_perfs):
+            n += o['n']
+            rc += o['recalls'][1]
+        return 0. if n == 0 else rc / n
+    data = [
+        [
+            {
+                'legend': szname,
+                'data': [model_recall(model['performance'][szname]['properties']) for model in all],
+            }
+        ] for szname, _ in settings.SIZE_RANGES
+    ]
+    labels = [model['model_name'] for model in all]
+    with plt.style.context({
+        'figure.subplot.left': .06,
+        'figure.subplot.right': .86,
+        'figure.subplot.top': .96,
+    }):
+        plt.figure(figsize=(10, 3))
+        plt.ylim((0., 1.))
+        plt.grid(which='major', axis='y', linestyle='dotted')
+        plot_tools.draw_bar(data, labels, width=.18, legend_mode='expand', legend_bbox_to_anchor=(1, .6, .16, .4))
+        plt.ylabel('Precision')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_model_size.svg'))
+        plt.close()
+
+
+def draw_by_props(model_name, performance):
+    def prop_recall(prop_perfs, prop_id):
+        n = rc = 0
+        for k, o in enumerate(prop_perfs):
+            if prop_id == -1 or int(k) & 2 ** prop_id:
+                n += o['n']
+                rc += o['recalls'][1]
+        return 0. if n == 0 else rc / n
+
+    data = [
+        [
+            {
+                'legend': szname,
+                'data': [prop_recall(performance[szname]['properties'], i) for i in range(-1, len(settings.PROPERTIES))],
+            }
+        ] for szname, _ in settings.SIZE_RANGES
+    ]
+    labels = ['all'] + settings.PROPERTIES
+    with plt.style.context({
+        'figure.subplot.left': .06,
+        'figure.subplot.right': .86,
+        'figure.subplot.top': .96,
+    }):
+        plt.figure(figsize=(10, 3))
+        plt.ylim((0., 1.))
+        plt.grid(which='major', axis='y', linestyle='dotted')
+        plot_tools.draw_bar(data, labels, width=.18, legend_mode='expand', legend_bbox_to_anchor=(1, .6, .16, .4))
+        plt.ylabel('Precision')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_props_size_{}.svg'.format(model_name)))
+        plt.close()
 
 
 if __name__ == '__main__':
