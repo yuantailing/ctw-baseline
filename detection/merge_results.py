@@ -50,7 +50,7 @@ def read():
             image_id, level_id, crop_name = os.path.splitext(os.path.basename(file_path))[0].split('_', 2)
             level_id = int(level_id)
             cx, cy, cw, ch = levelmap[level_id, crop_name]
-            cate_id = int(cate_id)
+            cate_id = settings.NUM_CHAR_CATES if proposal_output else int(cate_id)
             x, y, w, h, prob = float(x), float(y), float(w), float(h), float(prob)
             longsize = max(w, h)
             size_range = size_ranges[level_id]
@@ -85,14 +85,18 @@ def do_nms_sort(unmerged, nms):
                 covered = 0
                 for no in na:
                     covered += eval_tools.a_in_b(o['bbox'], no['bbox'])
+                    if covered > nms:
+                        break
                 if covered <= nms:
                     na.append(o)
+                    if len(na) >= settings.MAX_DET_PER_IMAGE:
+                        break
             cates[cate_id] = na
         all[image_id] = common_tools.reduce_sum(cates.values())
     return all
 
 
-def write(nms_sorted):
+def write(nms_sorted, file_path):
     with open(settings.CATES) as f:
         cates = json.load(f)
 
@@ -100,7 +104,7 @@ def write(nms_sorted):
         data_list = json.load(f)
     test_det = data_list['test_det']
 
-    with open(os.path.join(settings.PRODUCTS_ROOT, 'detections.jsonl'), 'w') as f:
+    with open(file_path, 'w') as f:
         for o in test_det:
             image_id = o['image_id']
             detections = nms_sorted[image_id]
@@ -111,13 +115,17 @@ def write(nms_sorted):
                     'text': '' if dt['cate_id'] >= settings.NUM_CHAR_CATES else cates[dt['cate_id']]['text'],
                     'bbox': dt['bbox'],
                     'score': dt['prob'],
-                } for dt in detections[:settings.MAX_DET_PER_IMAGE]],
+                } for dt in detections if proposal_output or dt['cate_id'] < settings.NUM_CHAR_CATES][:settings.MAX_DET_PER_IMAGE],
+                'proposals': [{  # for printtext
+                    'text': '',
+                    'bbox': dt['bbox'],
+                    'score': dt['prob'],
+                } for dt in detections if not proposal_output and dt['cate_id'] == settings.NUM_CHAR_CATES][:128],
             }))
             f.write('\n')
 
 
 def main():
-
     print('loading darknet outputs')
     unmerged = read()
 
@@ -125,8 +133,9 @@ def main():
     nms_sorted = do_nms_sort(unmerged, .5)
 
     print('writing results')
-    write(nms_sorted)
+    write(nms_sorted, os.path.join(settings.PRODUCTS_ROOT, 'detections.proposal.jsonl' if proposal_output else 'detections.jsonl'))
 
 
 if __name__ == '__main__':
+    proposal_output = 'proposal' in sys.argv[1:]
     main()

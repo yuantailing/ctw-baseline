@@ -93,7 +93,7 @@ def a_in_b(bbox_0, bbox_1):
     return AN / A0
 
 
-def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh, echo=False):
+def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh, proposal=False, echo=False):
     def error(s):
         return {'error': 1, 'msg': s}
 
@@ -185,7 +185,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 return error('line {} detection {} bbox w or h <= 0'.format(i + 1, j + 1))
 
         dt.sort(key=lambda o: (-o['score'], o['bbox'], o['text']))
-        dt = [(o['bbox'], o['text'], o['score']) for o in dt if o['text']]
+        dt = [(o['bbox'], o['text'], o['score']) for o in dt]
 
         gtobj = json.loads(gt)
         ig = [(o['bbox'], None) for o in gtobj['ignore']]
@@ -201,7 +201,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         dt_ig = [False] * len(dt)
         for j, dtchar in enumerate(dt):
             for k, gtchar in enumerate(gt):
-                if dtchar[1] == gtchar[1]:
+                if proposal or dtchar[1] == gtchar[1]:
                     miou = iou(dtchar[0], gtchar[0])
                     if miou > iou_thresh:
                         matches.append((j, k, miou))
@@ -261,7 +261,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         AP_all, curve = AP_compute(stat_all)
         performance[szname] = {
             'n': n,
-            'mAP': mAP / n,
+            'mAP': AP_all if proposal else mAP / n,
             'properties': szprops,
             'texts': texts,
             'AP': AP_all,

@@ -12,6 +12,7 @@ import numpy as np
 import os
 import plot_tools
 import settings
+import sys
 
 from classification_perf import get_chartjs
 from jinja2 import Template
@@ -26,10 +27,11 @@ def main(dt_file_path):
     report = eval_tools.detection_mAP(
         gt, dt,
         settings.PROPERTIES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH,
+        proposal=proposal,
         echo=True
     )
     assert 0 == report['error'], report['msg']
-    with codecs.open(settings.DETECTION_REPORT, 'w', 'utf-8') as f:
+    with codecs.open(settings.PROPOSAL_REPORT if proposal else settings.DETECTION_REPORT, 'w', 'utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=2, sort_keys=True)
     html_explore(report)
     show(report)
@@ -49,7 +51,7 @@ def html_explore(report):
     }]
     with open('explore_cls.template.html') as f:
         template = Template(f.read())
-    with codecs.open(settings.DETECTION_EXPLORE, 'w', 'utf-8') as f:
+    with codecs.open(settings.PROPOSAL_EXPLORE if proposal else settings.DETECTION_EXPLORE, 'w', 'utf-8') as f:
         f.write(template.render({
             'title': 'Explore detection performance',
             'chartjs': get_chartjs(),
@@ -116,7 +118,7 @@ def draw(report):
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
         plt.ylabel('Recall')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'det_recall_by_props_size.svg'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_recall_by_props_size.svg'))
         plt.close()
 
     with plt.style.context({
@@ -137,9 +139,10 @@ def draw(report):
         plt.legend()
         plt.xlabel('Recall')
         plt.ylabel('Precision')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'det_AP_curve.svg'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_AP_curve.svg'))
         plt.close()
 
 
 if __name__ == '__main__':
-    main('../detection/products/detections.jsonl')
+    proposal = 'proposal' in sys.argv[1:]
+    main('../detection/products/detections.proposal.jsonl' if proposal else '../detection/products/detections.jsonl')
