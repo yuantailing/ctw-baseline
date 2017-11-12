@@ -195,8 +195,6 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             if char['is_chinese']:
                 charset.add(char['text'])
                 gt.append((char['adjusted_bbox'], char['text'], char['properties']))
-            else:
-                ig.append((poly2bbox(char['polygon']), char['text']))
 
         matches = []
         dt_ig = [False] * len(dt)
