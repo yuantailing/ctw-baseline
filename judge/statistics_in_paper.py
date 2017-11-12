@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import bisect
 import codecs
 import json
 import matplotlib.pyplot as plt
@@ -26,6 +27,8 @@ def main():
     sum_chinese = {'trainval': 0, 'test': 0}
     sum_not_chinese = {'trainval': 0, 'test': 0}
     sum_ignore = {'trainval': 0, 'test': 0}
+    longsizes = {'trainval': list(), 'test': list()}
+    props = {'trainval': {prop: 0 for prop in settings.PROPERTIES}, 'test': {prop: 0 for prop in settings.PROPERTIES}}
     with open(settings.TRAIN) as f, open(settings.VAL) as f2:
         for line in f.read().splitlines() + f2.read().splitlines():
             anno = json.loads(line.strip())
@@ -37,6 +40,9 @@ def main():
                     num += 1
                     uniq.add(char['text'])
                     sum_chinese['trainval'] += 1
+                    longsizes['trainval'].append(max(char['adjusted_bbox'][2], char['adjusted_bbox'][3]))
+                    for prop in char['properties']:
+                        props['trainval'][prop] += 1
                 else:
                     sum_not_chinese['trainval'] += 1
             assert 0 < len(uniq)
@@ -54,6 +60,9 @@ def main():
                 num += 1
                 uniq.add(char['text'])
                 sum_chinese['test'] += 1
+                longsizes['test'].append(max(*char['size']))
+                for prop in char['properties']:
+                    props['test'][prop] += 1
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
             num_uniq_char[num]['test'] += 1
@@ -69,6 +78,9 @@ def main():
                     num += 1
                     uniq.add(char['text'])
                     sum_chinese['test'] += 1
+                    longsizes['test'].append(max(char['adjusted_bbox'][2], char['adjusted_bbox'][3]))
+                    for prop in char['properties']:
+                        props['test'][prop] += 1
                 else:
                     sum_not_chinese['test'] += 1
             assert 0 < len(uniq)
@@ -125,7 +137,8 @@ def main():
         'figure.subplot.top': .96,
     }):
         plt.figure(figsize=(10, 3))
-        plt.xlim((0, len(meta) + 1))
+        plt.xlim((0, len(labels) + 1))
+        plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, xticks_font_fname=chinese_ttf)
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.svg'))
         plt.close()
@@ -151,7 +164,8 @@ def main():
         'figure.subplot.top': .96,
     }):
         plt.figure(figsize=(5, 3))
-        plt.xlim((0, len(meta) + 1))
+        plt.xlim((0, len(labels) + 1))
+        plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
         plt.xlabel('Total number of characters in each image')
         plt.ylabel('Number of images')
@@ -179,11 +193,72 @@ def main():
         'figure.subplot.top': .96,
     }):
         plt.figure(figsize=(5, 3))
-        plt.xlim((0, len(meta) + 1))
+        plt.xlim((0, len(labels) + 1))
+        plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
         plt.xlabel('Number of different characters in each image')
         plt.ylabel('Number of images')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_uniq_char.svg'))
+        plt.close()
+
+    # instance size
+    longsizes['trainval'].sort()
+    longsizes['test'].sort()
+    ranges = list(range(0, 65, 4))
+    data = [
+        [
+            {
+                'legend': 'training set',
+                'data': [bisect.bisect_left(longsizes['trainval'], hi) - bisect.bisect_left(longsizes['trainval'], lo) for lo, hi in zip(ranges, ranges[1:] + [float('inf')])],
+            }, {
+                'legend': 'testing set',
+                'data': [bisect.bisect_left(longsizes['test'], hi) - bisect.bisect_left(longsizes['test'], lo) for lo, hi in zip(ranges, ranges[1:] + [float('inf')])],
+            },
+        ],
+    ]
+    labels = ['[{}, {})'.format(lo, hi) for lo, hi in zip(ranges, ranges[1:] + ['+∞'])]
+    with plt.style.context({
+        'figure.subplot.left': .14,
+        'figure.subplot.right': .96,
+        'figure.subplot.bottom': .21,
+        'figure.subplot.top': .96,
+    }):
+        plt.figure(figsize=(5, 3))
+        plt.xlim((0, len(labels) + 1))
+        plt.grid(which='major', axis='y', linestyle='dotted')
+        plot_tools.draw_bar(data, labels)
+        plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_instance_size.svg'))
+        plt.close()
+
+    # properties percentage
+    data = [
+        [
+            {
+                'legend': 'training set',
+                'data': [props['trainval'][prop] / sum_chinese['trainval'] * 100 for prop in settings.PROPERTIES],
+            },
+        ],
+        [
+            {
+                'legend': 'testing set',
+                'data': [props['test'][prop] / sum_chinese['test'] * 100 for prop in settings.PROPERTIES],
+            },
+        ],
+    ]
+    labels = settings.PROPERTIES
+    with plt.style.context({
+        'figure.subplot.left': .09,
+        'figure.subplot.right': .96,
+        'figure.subplot.bottom': .10,
+        'figure.subplot.top': .96,
+    }):
+        plt.figure(figsize=(6, 3))
+        plt.xlim((.3, .7 + len(labels)))
+        plt.grid(which='major', axis='y', linestyle='dotted')
+        plot_tools.draw_bar(data, labels)
+        plt.ylabel('Percentage of characters (%)')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_properties.svg'))
         plt.close()
 
 
