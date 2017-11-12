@@ -134,6 +134,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 curve.append(a)
         return AP / m['n'], curve
 
+    eval_type = 'proposals' if proposal else 'detections'
     charset = set()
     m = dict()
     for szname, _ in size_ranges:
@@ -154,38 +155,38 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             return error('line {} is not legal json'.format(i + 1))
         if not isinstance(dt, dict):
             return error('line {} is not json object'.format(i + 1))
-        if 'detections' not in dt:
-            return error('line {} does not contain key `detections`'.format(i + 1))
-        dt = dt['detections']
+        if eval_type not in dt:
+            return error('line {} does not contain key `{}`'.format(i + 1, eval_type))
+        dt = dt[eval_type]
         if not isinstance(dt, list):
-            return error('line {} detections is not an array'.format(i + 1))
+            return error('line {} {} is not an array'.format(i + 1, eval_type))
         if len(dt) > max_det:
-            return error('line {} number of detections exceeds limit ({})'.format(i + 1, max_det))
+            return error('line {} number of {} exceeds limit ({})'.format(i + 1, eval_type, max_det))
         for j, char in enumerate(dt):
             if not isinstance(char, dict):
-                return error('line {} detection {} is not an object'.format(i + 1, j + 1))
-            if 'text' not in char:
-                return error('line {} detection {} does not contain key `text`'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} is not an object'.format(i + 1, eval_type, j + 1))
+            if not proposal and 'text' not in char:
+                return error('line {} {} candidate {} does not contain key `text`'.format(i + 1, eval_type, j + 1))
             if 'score' not in char:
-                return error('line {} detection {} does not contain key `score`'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} does not contain key `score`'.format(i + 1, eval_type, j + 1))
             if 'bbox' not in char:
-                return error('line {} detection {} does not contain key `bbox`'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} does not contain key `bbox`'.format(i + 1, eval_type, j + 1))
             if not isinstance(char['text'], six.text_type):
-                return error('line {} detection {} text is not text-type'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} text is not text-type'.format(i + 1, eval_type, j + 1))
             if not isinstance(char['score'], (int, float)):
-                return error('line {} detection {} score is neither int nor float'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} score is neither int nor float'.format(i + 1, eval_type, j + 1))
             if not isinstance(char['bbox'], list):
-                return error('line {} detection {} bbox is not an array'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} bbox is not an array'.format(i + 1, eval_type, j + 1))
             if 4 != len(char['bbox']):
-                return error('line {} detection {} bbox is illegal'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} bbox is illegal'.format(i + 1, eval_type, j + 1))
             for t in char['bbox']:
                 if not isinstance(t, (int, float)):
-                    return error('line {} detection {} bbox is illegal'.format(i + 1, j + 1))
+                    return error('line {} {} candidate {} bbox is illegal'.format(i + 1, eval_type, j + 1))
             if char['bbox'][2] <= 0 or char['bbox'][3] <= 0:
-                return error('line {} detection {} bbox w or h <= 0'.format(i + 1, j + 1))
+                return error('line {} {} candidate {} bbox w or h <= 0'.format(i + 1, eval_type, j + 1))
 
-        dt.sort(key=lambda o: (-o['score'], o['bbox'], o['text']))
-        dt = [(o['bbox'], o['text'], o['score']) for o in dt]
+        dt.sort(key=lambda o: (-o['score'], o['bbox'], o.get('text')))
+        dt = [(o['bbox'], o.get('text'), o['score']) for o in dt]
 
         gtobj = json.loads(gt)
         ig = [(o['bbox'], None) for o in gtobj['ignore']]

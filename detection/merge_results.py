@@ -112,15 +112,15 @@ def write(nms_sorted, file_path):
             f.write(common_tools.to_jsonl({
                 'image_id': image_id,
                 'detections': [{
-                    'text': '' if dt['cate_id'] >= settings.NUM_CHAR_CATES else cates[dt['cate_id']]['text'],
+                    'text': cates[dt['cate_id']]['text'],
                     'bbox': dt['bbox'],
                     'score': dt['prob'],
-                } for dt in detections if proposal_output or dt['cate_id'] < settings.NUM_CHAR_CATES][:settings.MAX_DET_PER_IMAGE],
+                } for dt in detections if dt['cate_id'] < settings.NUM_CHAR_CATES][:settings.MAX_DET_PER_IMAGE],
                 'proposals': [{  # for printtext
                     'text': '',
                     'bbox': dt['bbox'],
                     'score': dt['prob'],
-                } for dt in detections if not proposal_output and dt['cate_id'] == settings.NUM_CHAR_CATES][:128],
+                } for dt in detections if dt['cate_id'] == settings.NUM_CHAR_CATES][:settings.MAX_DET_PER_IMAGE],
             }))
             f.write('\n')
 
@@ -133,7 +133,7 @@ def main():
     nms_sorted = do_nms_sort(unmerged, .5)
 
     print('writing results')
-    write(nms_sorted, os.path.join(settings.PRODUCTS_ROOT, 'detections.proposal.jsonl' if proposal_output else 'detections.jsonl'))
+    write(nms_sorted, os.path.join(settings.PRODUCTS_ROOT, 'proposals.jsonl' if proposal_output else 'detections.jsonl'))
 
 
 if __name__ == '__main__':

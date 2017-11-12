@@ -145,4 +145,4 @@ def draw(report):
 
 if __name__ == '__main__':
     proposal = 'proposal' in sys.argv[1:]
-    main('../detection/products/detections.proposal.jsonl' if proposal else '../detection/products/detections.jsonl')
+    main('../detection/products/proposals.jsonl' if proposal else '../detection/products/detections.jsonl')
