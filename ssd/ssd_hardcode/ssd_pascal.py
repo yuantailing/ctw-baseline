@@ -175,7 +175,7 @@ batch_sampler = [
         },
         ]
 train_transform_param = {
-        'mirror': True,
+        'mirror': False,
         'mean_value': [104, 117, 123],
         'resize_param': {
                 'prob': 1,
@@ -228,10 +228,10 @@ use_batchnorm = False
 lr_mult = 1
 # Use different initial learning rate.
 if use_batchnorm:
-    base_lr = 0.0004
+    base_lr = 0.0001
 else:
     # A learning rate for batch_size = 1, num_gpus = 1.
-    base_lr = 0.00004
+    base_lr = 0.00001
 
 # Modify the job name if you want.
 job_name = "SSD_{}".format(resize)
@@ -260,7 +260,7 @@ job_file = "{}/{}.sh".format(job_dir, model_name)
 # Stores the test image names and sizes. Created by data/VOC0712/create_list.sh
 name_size_file = settings.VAL_NAME_SIZE
 # The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
-pretrain_model = os.path.join(settings.CAFFE_ROOT, "models/VGGNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel")
+pretrain_model = settings.PRETRAIN_MODEL
 # Stores LabelMapItem.
 label_map_file = settings.LABELMAP_FILE
 
@@ -307,16 +307,16 @@ min_dim = 300
 # conv9_2 ==> 1 x 1
 mbox_source_layers = ['conv4_3', 'fc7', 'conv6_2', 'conv7_2', 'conv8_2', 'conv9_2']
 # in percent %
-min_ratio = 20
-max_ratio = 90
+min_ratio = 10
+max_ratio = 45
 step = int(math.floor((max_ratio - min_ratio) / (len(mbox_source_layers) - 2)))
 min_sizes = []
 max_sizes = []
 for ratio in xrange(min_ratio, max_ratio + 1, step):
   min_sizes.append(min_dim * ratio / 100.)
   max_sizes.append(min_dim * (ratio + step) / 100.)
-min_sizes = [min_dim * 10 / 100.] + min_sizes
-max_sizes = [min_dim * 20 / 100.] + max_sizes
+min_sizes = [min_dim * 5. / 100.] + min_sizes
+max_sizes = [min_dim * 10. / 100.] + max_sizes
 steps = [8, 16, 32, 64, 100, 300]
 aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
 # L2 normalize conv4_3.
@@ -326,7 +326,7 @@ if code_type == P.PriorBox.CENTER_SIZE:
   prior_variance = [0.1, 0.1, 0.2, 0.2]
 else:
   prior_variance = [0.1]
-flip = True
+flip = False
 clip = False
 
 # Solver parameters.
@@ -385,7 +385,7 @@ solver_param = {
     'snapshot_after_train': True,
     # Test parameters
     'test_iter': [test_iter],
-    'test_interval': 10000,
+    'test_interval': 1000000,
     'eval_type': "detection",
     'ap_version': "11point",
     'test_initialization': False,
@@ -433,7 +433,7 @@ make_if_not_exist(snapshot_dir)
 net = caffe.NetSpec()
 net.data, net.label = CreateAnnotatedDataLayer(train_data, batch_size=batch_size_per_device,
         train=True, output_label=True, label_map_file=label_map_file,
-        transform_param=train_transform_param, batch_sampler=batch_sampler)
+        transform_param=train_transform_param)
 
 VGGNetBody(net, from_layer='data', fully_conv=True, reduced=True, dilated=True,
     dropout=False)
