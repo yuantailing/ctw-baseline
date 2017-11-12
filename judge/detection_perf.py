@@ -117,8 +117,8 @@ def draw(report):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('Recall')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_recall_by_props_size.svg'))
+        plt.ylabel('recall')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_recall_by_props_size.pdf'))
         plt.close()
 
     with plt.style.context({
@@ -137,9 +137,9 @@ def draw(report):
             x = np.linspace(0, 1, len(y))
             plt.plot(x, y, label=szname)
         plt.legend()
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_AP_curve.svg'))
+        plt.xlabel('recall')
+        plt.ylabel('precision')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_AP_curve.pdf'))
         plt.close()
 
 

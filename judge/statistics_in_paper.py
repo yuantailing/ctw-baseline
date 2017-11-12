@@ -65,7 +65,7 @@ def main():
                     props['test'][prop] += 1
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
-            num_uniq_char[num]['test'] += 1
+            num_uniq_char[len(uniq)]['test'] += 1
             num_image['test'] += 1
     with open(settings.TEST_DETECTION_GT) as f:
         for line in f:
@@ -133,14 +133,14 @@ def main():
     labels = [o['text'] for o in meta]
     with plt.style.context({
         'figure.subplot.left': .06,
-        'figure.subplot.right': .96,
+        'figure.subplot.right': .98,
         'figure.subplot.top': .96,
     }):
         plt.figure(figsize=(10, 3))
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, xticks_font_fname=chinese_ttf)
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.svg'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.png'), dpi=600)
         plt.close()
 
     # num_char
@@ -167,9 +167,9 @@ def main():
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.xlabel('Total number of characters in each image')
-        plt.ylabel('Number of images')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_char.svg'))
+        plt.xlabel('number of character instances')
+        plt.ylabel('number of images')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_char.pdf'))
         plt.close()
 
     # num_uniq_char
@@ -196,15 +196,15 @@ def main():
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.xlabel('Number of different characters in each image')
-        plt.ylabel('Number of images')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_uniq_char.svg'))
+        plt.xlabel('number of character categories')
+        plt.ylabel('number of images')
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_uniq_char.pdf'))
         plt.close()
 
     # instance size
     longsizes['trainval'].sort()
     longsizes['test'].sort()
-    ranges = list(range(0, 65, 4))
+    ranges = list(range(0, 65, 8))
     data = [
         [
             {
@@ -216,19 +216,18 @@ def main():
             },
         ],
     ]
-    labels = ['[{}, {})'.format(lo, hi) for lo, hi in zip(ranges, ranges[1:] + ['+∞'])]
+    labels = ['{}-{}'.format(lo, hi) for lo, hi in zip(ranges, ranges[1:] + [''])]
     with plt.style.context({
-        'figure.subplot.left': .14,
+        'figure.subplot.left': .12,
         'figure.subplot.right': .96,
-        'figure.subplot.bottom': .21,
+        'figure.subplot.bottom': .10,
         'figure.subplot.top': .96,
     }):
-        plt.figure(figsize=(5, 3))
+        plt.figure(figsize=(6, 3))
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_instance_size.svg'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_instance_size.pdf'))
         plt.close()
 
     # properties percentage
@@ -236,19 +235,16 @@ def main():
         [
             {
                 'legend': 'training set',
-                'data': [props['trainval'][prop] / sum_chinese['trainval'] * 100 for prop in settings.PROPERTIES],
-            },
-        ],
-        [
-            {
+                'data': [props['trainval'][prop] for prop in settings.PROPERTIES],
+            }, {
                 'legend': 'testing set',
-                'data': [props['test'][prop] / sum_chinese['test'] * 100 for prop in settings.PROPERTIES],
+                'data': [props['test'][prop] for prop in settings.PROPERTIES],
             },
         ],
     ]
     labels = settings.PROPERTIES
     with plt.style.context({
-        'figure.subplot.left': .09,
+        'figure.subplot.left': .12,
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .10,
         'figure.subplot.top': .96,
@@ -257,8 +253,7 @@ def main():
         plt.xlim((.3, .7 + len(labels)))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.ylabel('Percentage of characters (%)')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_properties.svg'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_properties.pdf'))
         plt.close()
 
 
