@@ -86,7 +86,7 @@ def show(report):
                     n += o['n']
                     rc += o['recall']
             r = 0. if n == 0 else rc / n
-            print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
+            print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r))
         for char in freq_order[:10]:
             print(char, percentage(performance[szname]['texts'][char], 1))
         print()

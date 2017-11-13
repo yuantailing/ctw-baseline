@@ -59,7 +59,7 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
             thisrc = {'recalls': {n: 1 if cgt['text'] in cpr[:n] else 0 for n in recall_n}, 'n': 1}
             longsize = max(cgt['size'])
             for szname, rng in size_ranges:
-                if rng[0] <= longsize and longsize < rng[1]:
+                if rng[0] <= longsize < rng[1]:
                     k = 0
                     for prop in cgt['properties']:
                         k += 2 ** properties.index(prop)
@@ -214,21 +214,23 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         for szname, size_range in size_ranges:
             def in_size(bbox):
                 longsize = max(bbox[2], bbox[3])
-                return  size_range[0] <= longsize and longsize < size_range[1]
+                return  size_range[0] <= longsize < size_range[1]
 
             dt_matched = [0 if in_size(o[0]) and False == b else 2 for o, b in zip(dt, dt_ig)]
-            gt_taken = [0 if in_size(o[0]) else 2 for o in gt]
+            gt_taken = [(0, None) if in_size(o[0]) else (2, None) for o in gt]
             for i_dt, i_gt, _ in matches:
-                if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt]:
-                    if 0 == gt_taken[i_gt]:
+                if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt][0]:
+                    if 0 == gt_taken[i_gt][0]:
                         dt_matched[i_dt] = 1
-                        gt_taken[i_gt] = 1
+                        gt_taken[i_gt] = (1, i_dt)
                     else:
                         dt_matched[i_dt] = 2
             for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
                 if match_status != 2:
                     m[szname][dtchar[1]]['detections'].append((match_status, dtchar[2]))
-            for gtchar, taken in zip(gt, gt_taken):
+            top_dt = sorted([i for i, ms in enumerate(dt_matched) if ms != 2], key=lambda i: (-dt[i][2], dt_matched[i]))
+            top_dt = set(top_dt[:sum([taken != 2 for taken, _ in gt_taken])])
+            for gtchar, (taken, dt_id) in zip(gt, gt_taken):
                 if taken != 2:
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
@@ -236,7 +238,8 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                     for prop in gtchar[2]:
                         k += 2 ** properties.index(prop)
                     thism['properties'][k]['n'] += 1
-                    thism['properties'][k]['recall'] += taken
+                    if taken != 0 and dt_id in top_dt:
+                        thism['properties'][k]['recall'] += 1
 
     performance = dict()
     for szname, _ in size_ranges:
