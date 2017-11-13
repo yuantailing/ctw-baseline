@@ -28,7 +28,7 @@ def main():
     sum_not_chinese = {'trainval': 0, 'test': 0}
     sum_ignore = {'trainval': 0, 'test': 0}
     longsizes = {'trainval': list(), 'test': list()}
-    props = {'trainval': {prop: 0 for prop in settings.PROPERTIES}, 'test': {prop: 0 for prop in settings.PROPERTIES}}
+    props = {szname: {prop: 0 for prop in settings.PROPERTIES + ['__all__']} for szname, _ in settings.SIZE_RANGES}
     with open(settings.TRAIN) as f, open(settings.VAL) as f2:
         for line in f.read().splitlines() + f2.read().splitlines():
             anno = json.loads(line.strip())
@@ -40,9 +40,13 @@ def main():
                     num += 1
                     uniq.add(char['text'])
                     sum_chinese['trainval'] += 1
-                    longsizes['trainval'].append(max(char['adjusted_bbox'][2], char['adjusted_bbox'][3]))
-                    for prop in char['properties']:
-                        props['trainval'][prop] += 1
+                    longsize = max(char['adjusted_bbox'][2], char['adjusted_bbox'][3])
+                    longsizes['trainval'].append(longsize)
+                    for szname, szrange in settings.SIZE_RANGES:
+                        if szrange[0] <= longsize < szrange[1]:
+                            for prop in char['properties']:
+                                props[szname][prop] += 1
+                            props[szname]['__all__'] += 1
                 else:
                     sum_not_chinese['trainval'] += 1
             assert 0 < len(uniq)
@@ -60,9 +64,13 @@ def main():
                 num += 1
                 uniq.add(char['text'])
                 sum_chinese['test'] += 1
-                longsizes['test'].append(max(*char['size']))
-                for prop in char['properties']:
-                    props['test'][prop] += 1
+                longsize = max(*char['size'])
+                longsizes['test'].append(longsize)
+                for szname, szrange in settings.SIZE_RANGES:
+                    if szrange[0] <= longsize < szrange[1]:
+                        for prop in char['properties']:
+                            props[szname][prop] += 1
+                        props[szname]['__all__'] += 1
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
             num_uniq_char[len(uniq)]['test'] += 1
@@ -79,8 +87,11 @@ def main():
                     uniq.add(char['text'])
                     sum_chinese['test'] += 1
                     longsizes['test'].append(max(char['adjusted_bbox'][2], char['adjusted_bbox'][3]))
-                    for prop in char['properties']:
-                        props['test'][prop] += 1
+                    for szname, szrange in settings.SIZE_RANGES:
+                        if szrange[0] <= longsize < szrange[1]:
+                            for prop in char['properties']:
+                                props[szname][prop] += 1
+                            props[szname]['__all__'] += 1
                 else:
                     sum_not_chinese['test'] += 1
             assert 0 < len(uniq)
@@ -237,13 +248,10 @@ def main():
     data = [
         [
             {
-                'legend': 'training set',
-                'data': [props['trainval'][prop] for prop in settings.PROPERTIES],
-            }, {
-                'legend': 'testing set',
-                'data': [props['test'][prop] for prop in settings.PROPERTIES],
-            },
-        ],
+                'legend': szname,
+                'data': [props[szname][prop] / props[szname]['__all__'] * 100 for prop in settings.PROPERTIES],
+            }
+        ] for szname, szrange in settings.SIZE_RANGES
     ]
     labels = settings.PROPERTIES
     with plt.style.context({
@@ -255,7 +263,8 @@ def main():
         plt.figure(figsize=(6, 3))
         plt.xlim((.3, .7 + len(labels)))
         plt.grid(which='major', axis='y', linestyle='dotted')
-        plot_tools.draw_bar(data, labels)
+        plt.gca().yaxis.set_major_formatter(plt.FuncFormatter('{:.0f}%'.format))
+        plot_tools.draw_bar(data, labels, width=.18)
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_properties.pdf'))
         plt.close()
 
