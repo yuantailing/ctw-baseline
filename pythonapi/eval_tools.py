@@ -202,7 +202,6 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                     miou = iou(dtchar[0], gtchar[0])
                     if miou > iou_thresh:
                         dt_matches[i_dt].append((i_gt, miou))
-                    miou = a_in_b(dtchar[0], gtchar[0])
             for igchar in ig:
                 miou = a_in_b(dtchar[0], igchar[0])
                 if miou > iou_thresh:
@@ -228,7 +227,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
                 if match_status != 2:
                     m[szname][dtchar[1]]['detections'].append((match_status, i_dt, dtchar[2]))
-            top_dt = sorted([i for i, ms in enumerate(dt_matched) if ms != 2], key=lambda i: (-dt[i][2], dt_matched[i]))
+            top_dt = [i for i, ms in enumerate(dt_matched) if ms != 2]
             top_dt = set(top_dt[:sum([taken != 2 for taken, _ in gt_taken])])
             for gtchar, (taken, dt_id) in zip(gt, gt_taken):
                 if taken != 2:

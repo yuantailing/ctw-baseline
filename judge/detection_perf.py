@@ -61,7 +61,7 @@ def html_explore(report):
 
 
 def show(report):
-    def percentage(x, digit=2):
+    def percentage(x, digit=1):
         fmt = {
             1: '{:4.1f}%',
             2: '{:5.2f}%',
@@ -88,7 +88,7 @@ def show(report):
             r = 0. if n == 0 else rc / n
             print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r))
         for char in freq_order[:10]:
-            print(char, percentage(performance[szname]['texts'][char], 1))
+            print(char, percentage(performance[szname]['texts'][char]))
         print()
 
 
