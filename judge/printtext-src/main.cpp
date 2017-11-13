@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QDebug>
 #include <algorithm>
+#include <cassert>
 
 static QTextStream cin(stdin);
 static QTextStream cout(stdout);
@@ -26,22 +27,28 @@ int main(int argc, char *argv[])
     }
 
     QImage img(args[0]);
-    QColor color(args[2]);
     QJsonDocument doc = QJsonDocument::fromJson(cin.readLine().toUtf8());
 
-    QVector<QPair<QRectF, QString> > v;
-    QJsonArray array = doc.array();
+    QVector<QPair<QRectF, QPair<QString, QString> > > v;
+    QJsonObject object = doc.object();
+    QJsonArray array = object["boxes"].toArray();
+    QJsonArray jcrop = object["crop"].toArray();
+    QRect crop(jcrop[0].toInt(), jcrop[1].toInt(), jcrop[2].toInt(), jcrop[3].toInt());
+    QString place = object["place"].toString();
+    img = img.copy(crop);
+    assert(place == "smart" || place == "force");
     for (int i = 0; i < array.size(); i++) {
         QString text = array[i].toObject()["text"].toString();
+        QString color = array[i].toObject()["color"].toString();
         QJsonArray bbox = array[i].toObject()["bbox"].toArray();
-        double xmin = bbox[0].toDouble();
-        double ymin = bbox[1].toDouble();
+        double xmin = bbox[0].toDouble() - crop.x();
+        double ymin = bbox[1].toDouble() - crop.y();
         double w = bbox[2].toDouble();
         double h = bbox[3].toDouble();
         QRectF rect(xmin, ymin, w, h);
-        v.push_back(qMakePair(rect, text));
+        v.push_back(qMakePair(rect, qMakePair(text, color)));
     }
-    std::sort(v.begin(), v.end(), [](QPair<QRectF, QString> const &a, QPair<QRectF, QString> const &b) {
+    std::sort(v.begin(), v.end(), [](QPair<QRectF, QPair<QString, QString> > const &a, QPair<QRectF, QPair<QString, QString> > const &b) {
         return a.first.topLeft().x() == b.first.topLeft().x() ?
                     a.first.topLeft().y() < b.first.topLeft().y() :
                     a.first.topLeft().x() < b.first.topLeft().x();
@@ -55,30 +62,38 @@ int main(int argc, char *argv[])
     }
     for (int i = v.size() - 1; i >= 0; i--) {
         QRectF bbox = v[i].first;
-        QString text = v[i].second;
-        if (text.isEmpty())
-            text = app.tr("■");
+        QString color = v[i].second.second;
         QPen pen(color);
         pen.setWidth(2);
         painter.setOpacity(1.0);
         painter.setPen(pen);
         painter.setBrush(Qt::NoBrush);
         painter.drawRect(bbox);
+    }
+    for (int i = v.size() - 1; i >= 0; i--) {
+        QRectF bbox = v[i].first;
+        QString text = v[i].second.first;
+        QString color = v[i].second.second;
+        if (text.isEmpty())
+            continue;
         double higher = 8.0;
         int fontsize = 16.0;
+        int fontpadding = 2.0;
         double lefter = 6.0;
         double deltax = 2.0;
-        forbidden_area.append(bbox);
         double texty = bbox.topLeft().y() - higher;
         double textx0 = bbox.topLeft().x() - lefter;
         if (textx0 < fontsize)
             textx0 = (double)fontsize;
         double textx = textx0;
-        QRectF textArea(0, 0, 0, 0);
+        auto textArea = [&]()->QRectF {
+            return QRectF(textx - fontsize, texty - fontsize, fontsize, fontsize);
+        };
         auto isForbidden = [&]() {
-            textArea = QRectF(textx - fontsize, texty - fontsize, fontsize, fontsize);
+            if (place == "force")
+                return false;
             foreach (QRectF const &r, forbidden_area) {
-                QRectF inter = textArea.intersected(r);
+                QRectF inter = textArea().intersected(r);
                 if (inter.isValid())
                     return true;
             }
@@ -95,14 +110,16 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        QPen pen(color);
         pen.setWidth(1);
-        painter.setPen(pen);
         painter.setOpacity(0.5);
+        painter.setPen(pen);
+        painter.setFont(QFont("SimHei", fontsize - fontpadding * 2));
         painter.drawLine(bbox.topLeft(), QPointF(textx0, texty));
         painter.drawLine(QPointF(textx - fontsize, texty), QPointF(textx0, texty));
         painter.setOpacity(1.0);
-        painter.drawText(textArea, Qt::AlignCenter, text);
-        forbidden_area.append(textArea);
+        painter.drawText(textArea(), Qt::AlignCenter, text);
+        forbidden_area.append(textArea());
     }
     painter.end();
     QImageWriter imageWriter;
