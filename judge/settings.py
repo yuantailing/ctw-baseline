@@ -9,6 +9,7 @@ TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
 PRODUCTS_ROOT          = 'products'
+STAT_FREQUENCY         = 'products/stat_frequency.json'
 TEST_CLS_CROPPED       = 'products/test_cls_cropped.pkl'
 PREDICTIONS_HTML       = 'products/predictions_compare.html'
 CLASSIFICATION_REPORT  = 'products/explore_cls.html'

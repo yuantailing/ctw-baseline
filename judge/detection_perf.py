@@ -67,6 +67,9 @@ def show(report):
             2: '{:5.2f}%',
         }
         return fmt[digit].format(x * 100)
+    with open(settings.STAT_FREQUENCY) as f:
+        frequency = json.load(f)
+    freq_order = [o['text'] for o in frequency]
     performance = report['performance']
     for szname, stat in sorted(performance.items()):
         print(szname)
@@ -84,6 +87,8 @@ def show(report):
                     rc += o['recall']
             r = 0. if n == 0 else rc / n
             print('{:13s}'.format(prop), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r), '(at most {} guesses per image)'.format(settings.MAX_DET_PER_IMAGE))
+        for char in freq_order[:10]:
+            print(char, percentage(performance[szname]['texts'][char], 1))
         print()
 
 

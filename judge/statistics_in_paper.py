@@ -110,6 +110,9 @@ def main():
     print('sum_not_chinese', sum_not_chinese['trainval'], sum_not_chinese['test'])
     print('sum_ignore', sum_ignore['trainval'], sum_ignore['test'])
 
+    with codecs.open(settings.STAT_FREQUENCY, 'w', 'utf-8') as f:
+        json.dump(most_freq, f, ensure_ascii=False, indent=2)
+
     if not os.path.isdir(settings.PLOTS_DIR):
         os.makedirs(settings.PLOTS_DIR)
     chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')

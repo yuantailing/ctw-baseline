@@ -78,6 +78,9 @@ def main():
     def recall_add(a, b):
         return {'recalls': {n: a['recalls'][n] + b['recalls'][n] for n in settings.RECALL_N}, 'n': a['n'] + b['n']}
 
+    with open(settings.STAT_FREQUENCY) as f:
+        frequency = json.load(f)
+    freq_order = [o['text'] for o in frequency]
     for report_obj in all:
         print('[', report_obj['model_name'], ']')
         performance = report_obj['performance']
@@ -89,8 +92,8 @@ def main():
                     if i == -1 or int(k) & 2 ** i:
                         recall = recall_add(recall, o)
                 recall_print(recall, name)
-        for char, recall in sorted(performance['all']['texts'].items(), key=lambda o: -o[1]['n'])[:10]:
-            recall_print(recall, char)
+        for char in freq_order[:10]:
+            recall_print(performance['all']['texts'][char], char)
 
     draw_by_models(all)
     for report_obj in all:
