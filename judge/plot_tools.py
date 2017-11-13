@@ -13,7 +13,7 @@ def draw_bar(data, labels, width=None, xticks_font_fname=None, legend_kwargs=dic
     n = len(labels)
     m = len(data)
     if not width:
-        width = 1. / (m+.6)
+        width = 1. / (m + .6)
     off = 1.
     legend_bar = []
     legend_text = []

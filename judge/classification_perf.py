@@ -126,7 +126,7 @@ def draw_by_models(all):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('precision')
+        plt.ylabel('accuracy')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_model_size.pdf'))
         plt.close()
 
@@ -161,7 +161,7 @@ def draw_by_props(model_name, performance):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('precision')
+        plt.ylabel('accuracy')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_props_size_{}.pdf'.format(model_name)))
         plt.close()
 

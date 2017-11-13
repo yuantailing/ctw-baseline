@@ -115,17 +115,15 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             return 0., []
         acc = []
         rc_inc = []
-        m['detections'].sort(key=lambda t: (-t[1], t[0]))
+        m['detections'].sort(key=lambda t: (-t[2], t[1], t[0]))  # sort order by matched ASC, intended to prevent from cheating
         match_cnt = 0
-        for i, (matched, _) in enumerate(m['detections']):
+        for i, (matched, _, _) in enumerate(m['detections']):
             assert matched in (0, 1)
             match_cnt += matched
             acc.append(match_cnt / (i + 1))
             rc_inc.append(matched)
-        max_acc = 0
-        for i in range(len(acc) - 1, -1, -1):
-            max_acc = max(max_acc, acc[i])
-            acc[i] = max_acc
+        for i in range(len(acc) - 1, 0, -1):
+            acc[i - 1] = max(acc[i - 1], acc[i])
         AP = 0
         curve = []
         for a, r in zip(acc, rc_inc):
@@ -185,7 +183,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             if char['bbox'][2] <= 0 or char['bbox'][3] <= 0:
                 return error('line {} {} candidate {} bbox w or h <= 0'.format(i + 1, eval_type, j + 1))
 
-        dt.sort(key=lambda o: (-o['score'], o['bbox'], o.get('text')))
+        dt.sort(key=lambda o: -o['score'])  # sort must be stable, otherwise mAP will be slightly different
         dt = [(o['bbox'], o.get('text'), o['score']) for o in dt]
 
         gtobj = json.loads(gt)
@@ -196,20 +194,21 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 charset.add(char['text'])
                 gt.append((char['adjusted_bbox'], char['text'], char['properties']))
 
-        matches = []
+        dt_matches = [[] for i in range(len(dt))]
         dt_ig = [False] * len(dt)
-        for j, dtchar in enumerate(dt):
-            for k, gtchar in enumerate(gt):
+        for i_dt, dtchar in enumerate(dt):
+            for i_gt, gtchar in enumerate(gt):
                 if proposal or dtchar[1] == gtchar[1]:
                     miou = iou(dtchar[0], gtchar[0])
                     if miou > iou_thresh:
-                        matches.append((j, k, miou))
+                        dt_matches[i_dt].append((i_gt, miou))
                     miou = a_in_b(dtchar[0], gtchar[0])
-            for k, igchar in enumerate(ig):
+            for igchar in ig:
                 miou = a_in_b(dtchar[0], igchar[0])
                 if miou > iou_thresh:
-                    dt_ig[j] = True
-        matches.sort(key=lambda t: (-t[2], t[0], t[1]))
+                    dt_ig[i_dt] = True
+        for matches in dt_matches:
+            matches.sort(key=lambda t: -t[1])  # sort must be stable, otherwise you shoule use key=lambda t: (-t[1], t[0])
 
         for szname, size_range in size_ranges:
             def in_size(bbox):
@@ -218,16 +217,17 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
 
             dt_matched = [0 if in_size(o[0]) and False == b else 2 for o, b in zip(dt, dt_ig)]
             gt_taken = [(0, None) if in_size(o[0]) else (2, None) for o in gt]
-            for i_dt, i_gt, _ in matches:
-                if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt][0]:
-                    if 0 == gt_taken[i_gt][0]:
-                        dt_matched[i_dt] = 1
-                        gt_taken[i_gt] = (1, i_dt)
-                    else:
-                        dt_matched[i_dt] = 2
+            for i_dt, matches in enumerate(dt_matches):
+                for i_gt, _ in matches:
+                    if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt][0]:
+                        if 0 == gt_taken[i_gt][0]:
+                            dt_matched[i_dt] = 1
+                            gt_taken[i_gt] = (1, i_dt)
+                        else:
+                            dt_matched[i_dt] = 2
             for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
                 if match_status != 2:
-                    m[szname][dtchar[1]]['detections'].append((match_status, dtchar[2]))
+                    m[szname][dtchar[1]]['detections'].append((match_status, i_dt, dtchar[2]))
             top_dt = sorted([i for i, ms in enumerate(dt_matched) if ms != 2], key=lambda i: (-dt[i][2], dt_matched[i]))
             top_dt = set(top_dt[:sum([taken != 2 for taken, _ in gt_taken])])
             for gtchar, (taken, dt_id) in zip(gt, gt_taken):
