@@ -29,7 +29,7 @@ def write_darknet_test_cfg():
         f.write('\n')
 
 
-def crop_test_images():
+def crop_test_images(list_file_name):
     imshape = (2048, 2048, 3)
 
     with open(settings.CATES) as f:
@@ -50,7 +50,7 @@ def crop_test_images():
             assert image.shape == imshape
         cropped_list = []
         for level_id, (cropratio, cropoverlap) in enumerate(settings.TEST_CROP_LEVELS):
-            cropshape = (settings.TEST_IMAGE_SIZE // cropratio, settings.TEST_IMAGE_SIZE // cropratio)
+            cropshape = (int(round(settings.TEST_IMAGE_SIZE // cropratio)), int(round(settings.TEST_IMAGE_SIZE // cropratio)))
             for o in darknet_tools.get_crop_bboxes(imshape, cropshape, (cropoverlap, cropoverlap)):
                 xlo = o['xlo']
                 xhi = xlo + cropshape[1]
@@ -79,7 +79,7 @@ def crop_test_images():
         if i % 1000 == 0:
             print('list test', i, '/', len(test_det))
         testset += crop_once(anno, False)
-    with open(settings.DARKNET_VALID_LIST, 'w') as f:
+    with open(list_file_name, 'w') as f:
         for file_name in testset:
             f.write(file_name)
             f.write('\n')
@@ -88,7 +88,7 @@ def crop_test_images():
 def main():
     write_darknet_test_cfg()
     if not common_tools.exists_and_newer(settings.DARKNET_VALID_LIST, settings.CATES):
-        crop_test_images()
+        crop_test_images(settings.DARKNET_VALID_LIST)
 
 
 if __name__ == '__main__':

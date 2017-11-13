@@ -18,12 +18,7 @@ from pythonapi import common_tools, eval_tools
 from six.moves import cPickle
 
 
-def read():
-    file_paths = []
-    for split_id in range(settings.TEST_SPLIT_NUM):
-        darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
-        result_file_path = os.path.join(settings.DARKNET_RESULTS_DIR, '{}.txt'.format(darknet_results_out))
-        file_paths.append(result_file_path)
+def read(file_paths):
     all = defaultdict(list)
     imshape = (2048, 2048, 3)
     removal = (0., 0.)
@@ -126,8 +121,14 @@ def write(nms_sorted, file_path):
 
 
 def main():
+    file_paths = []
+    for split_id in range(settings.TEST_SPLIT_NUM):
+        darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
+        result_file_path = os.path.join(settings.DARKNET_RESULTS_DIR, '{}.txt'.format(darknet_results_out))
+        file_paths.append(result_file_path)
+
     print('loading darknet outputs')
-    unmerged = read()
+    unmerged = read(file_paths)
 
     print('doing nms sort')
     nms_sorted = do_nms_sort(unmerged, .5)
