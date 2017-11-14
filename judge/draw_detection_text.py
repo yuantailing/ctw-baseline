@@ -78,7 +78,7 @@ def main():
                 a.append({'bbox': char['bbox'], 'text': '', 'color': color_ignore})
         return a
 
-    def dt2array(dt, gtobj, draw_ignore):
+    def dt2array(dtobj, gtobj, draw_ignore, draw_proposal):
         iou_thresh = settings.IOU_THRESH
         charset = set()
         proposal = False
@@ -86,7 +86,7 @@ def main():
         def in_size(_):
             return True
 
-        dt = dt['detections']
+        dt = dtobj['detections']
         dt.sort(key=lambda o: -o['score'])  # sort must be stable, otherwise mAP will be slightly different
         dt = [(o['bbox'], o.get('text'), o['score']) for o in dt]
 
@@ -134,12 +134,28 @@ def main():
 
         a = list()
         colormap = {0: '#0ff', 1: '#0f0', 2: '#ff0'}
-        for i in reversed(range(dt_topnum)):
+        for i in range(dt_topnum):
             bbox, text, score = dt[i]
             taken = dt_matched[i]
             if 2 != taken or draw_ignore:
-                a.append({'bbox': bbox, 'text': text or '■', 'color': colormap[taken]})
-        return a
+                flag = True
+                for o in a:
+                    if settings.IOU_THRESH < eval_tools.iou(bbox, o['bbox']):
+                        flag = False
+                if flag:
+                    a.append({'bbox': bbox, 'text': text or '■', 'color': colormap[taken]})
+        if draw_proposal:
+            for o in sorted(dtobj['proposals'], key=lambda o: -o['score']):
+                bbox, score = o['bbox'], o['score']
+                if dt_topnum > 0 and score >= dt[dt_topnum - 1][2]:
+                    s = 0
+                    for igbbox, _ in ig:
+                        s += eval_tools.a_in_b(bbox, igbbox)
+                    for dtbbox, _, _ in dt[:dt_topnum]:
+                        s += eval_tools.a_in_b(bbox, dtbbox)
+                    if s <= settings.IOU_THRESH:
+                        a.append({'bbox': bbox, 'text': '', 'color': '#00f'})
+        return list(reversed(a))
 
     def remove_outside(drawlist, crop):
         def foo(o):
@@ -150,18 +166,18 @@ def main():
             return True
         return list(filter(foo, drawlist))
 
-    selected = [(o['image_id'], 0, 0) for i, o in enumerate(data_list['test_det']) if i % 1000 == 0]
+    selected = [(o['image_id'], 0, 0, 2048, 2048) for i, o in enumerate(data_list['test_det']) if i % 1000 == 0]
     draw_gt = False
     draw_ignore = False
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
         os.makedirs(settings.PRINTTEXT_DRAWING_DIR)
     tasks = []
-    for image_id, x, y in sorted(selected):
+    for image_id, x, y, w, h in sorted(selected):
         i = [o['image_id'] for o in data_list['test_det']].index(image_id)
         gt = json.loads(gts[i])
         dt = json.loads(dts[i])
-        crop = (x, y, 2048, 2048)
+        crop = (x, y, w, h)
         file_name = os.path.join(settings.TEST_IMAGE_DIR, gt['file_name'])
         if draw_gt:
             tasks.append((
@@ -177,7 +193,7 @@ def main():
             file_name,
             os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
             {
-                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=draw_ignore), crop),
+                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=draw_ignore, draw_proposal=False), crop),
                 'crop': crop,
                 'place': 'force',
             }

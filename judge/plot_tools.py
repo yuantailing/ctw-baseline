@@ -67,7 +67,7 @@ def print_text(in_file_name, out_file_name, obj):
                     color = tuple(int(s, 16) / 15 for s in color)
             bbox = [bbox[0] - crop[0], bbox[1] - crop[1], bbox[2], bbox[3]]
             ax.add_patch(patches.Rectangle(bbox[:2], *bbox[2:], fill=False, color=color))
-            ax.text(bbox[0], bbox[1], text, fontproperties=font, fontsize=10, color=color,
+            ax.text(bbox[0], bbox[1], text, fontproperties=font, fontsize=14, color=color,
                     horizontalalignment='right', verticalalignment='bottom')
-        plt.savefig(out_file_name, dpi=dpi)
+        plt.savefig(out_file_name, dpi=dpi * 2)
         plt.close()
