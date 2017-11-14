@@ -166,9 +166,19 @@ def main():
             return True
         return list(filter(foo, drawlist))
 
-    selected = [(o['image_id'], 0, 0, 2048, 2048) for i, o in enumerate(data_list['test_det']) if i % 1000 == 0]
+    selected = [
+        ('1009894', 950, 740, 600, 500),
+        ('1017943', 0, 700, 600, 500),
+        ('1024562', 150, 520, 600, 500),
+        ('2001286', 0, 580, 600, 500),
+        ('2026059', 843, 659, 600, 500),
+        ('2031598', 224, 663, 600, 500),
+        ('3026134', 140, 490, 600, 500),
+        ('3031589', 1448, 740, 600, 500),
+        ('3032440', 320, 767, 600, 500),
+        ('3041012', 850, 800, 600, 500),
+    ]
     draw_gt = False
-    draw_ignore = False
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
         os.makedirs(settings.PRINTTEXT_DRAWING_DIR)
@@ -184,7 +194,7 @@ def main():
                 file_name,
                 os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
                 {
-                    'boxes': remove_outside(gt2array(gt, draw_ignore=draw_ignore), crop),
+                    'boxes': remove_outside(gt2array(gt, draw_ignore=True), crop),
                     'crop': crop,
                     'place': 'force',
                 }
@@ -193,7 +203,7 @@ def main():
             file_name,
             os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
             {
-                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=draw_ignore, draw_proposal=False), crop),
+                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=False, draw_proposal=False), crop),
                 'crop': crop,
                 'place': 'force',
             }
