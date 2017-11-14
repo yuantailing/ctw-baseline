@@ -133,14 +133,14 @@ def main():
                 allowed -= 1
 
         a = list()
-        colormap = {0: '#0ff', 1: '#0f0', 2: '#ff0'}
+        colormap = {0: '#ff0', 1: '#0f0', 2: '#ff0'}
         for i in range(dt_topnum):
             bbox, text, score = dt[i]
             taken = dt_matched[i]
             if 2 != taken or draw_ignore:
                 flag = True
                 for o in a:
-                    if settings.IOU_THRESH < eval_tools.iou(bbox, o['bbox']):
+                    if settings.IOU_THRESH < eval_tools.a_in_b(bbox, o['bbox']) or settings.IOU_THRESH < eval_tools.a_in_b(o['bbox'], bbox):
                         flag = False
                 if flag:
                     a.append({'bbox': bbox, 'text': text or '■', 'color': colormap[taken]})
