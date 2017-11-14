@@ -77,13 +77,13 @@ int main(int argc, char *argv[])
         if (text.isEmpty())
             continue;
         double higher = 8.0;
-        int fontsize = 16.0;
+        int fontsize = 22.0;
         int fontpadding = 2.0;
         double lefter = 6.0;
         double deltax = 2.0;
         double texty = bbox.topLeft().y() - higher;
         double textx0 = bbox.topLeft().x() - lefter;
-        if (textx0 < fontsize)
+        if (textx0 < fontsize && place != "force")
             textx0 = (double)fontsize;
         double textx = textx0;
         auto textArea = [&]()->QRectF {

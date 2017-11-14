@@ -13,10 +13,22 @@ import os
 import plot_tools
 import settings
 import six
+import threading
 
 from collections import defaultdict
-from pythonapi import anno_tools
+from pythonapi import anno_tools, common_tools
 from six.moves import urllib
+
+
+@common_tools.synchronized(threading.Lock())
+def get_chinese_ttf():
+    if not os.path.isdir(settings.PLOTS_DIR):
+        os.makedirs(settings.PLOTS_DIR)
+    chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')
+    if not os.path.isfile(chinese_ttf):
+        urllib.request.urlretrieve('http://fonts.cooltext.com/Downloader.aspx?ID=11120',
+                                   chinese_ttf)
+    return chinese_ttf
 
 
 def main():
@@ -124,13 +136,6 @@ def main():
     with codecs.open(settings.STAT_FREQUENCY, 'w', 'utf-8') as f:
         json.dump(most_freq, f, ensure_ascii=False, indent=2)
 
-    if not os.path.isdir(settings.PLOTS_DIR):
-        os.makedirs(settings.PLOTS_DIR)
-    chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')
-    if not os.path.isfile(chinese_ttf):
-        urllib.request.urlretrieve('http://fonts.cooltext.com/Downloader.aspx?ID=11120',
-                                   chinese_ttf)
-
     # most_freq
     meta = most_freq[:50]
     data = [
@@ -153,7 +158,7 @@ def main():
         plt.figure(figsize=(10, 3))
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
-        plot_tools.draw_bar(data, labels, xticks_font_fname=chinese_ttf)
+        plot_tools.draw_bar(data, labels, xticks_font_fname=get_chinese_ttf())
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.png'), dpi=600)
         plt.close()
 

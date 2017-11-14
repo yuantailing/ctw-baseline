@@ -14,6 +14,18 @@ import threading
 from six.moves import queue
 
 
+def synchronized(lock):
+    def wrap(f):
+        def newFunction(*args, **kw):
+            lock.acquire()
+            try:
+                return f(*args, **kw)
+            finally:
+                lock.release()
+        return newFunction
+    return wrap
+
+
 def to_jsonl(obj):
     return json.dumps(obj, ensure_ascii=True, allow_nan=False, indent=None, sort_keys=True)
 

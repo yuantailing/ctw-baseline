@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import json
 import os
+import plot_tools
 import settings
 import subprocess
 
@@ -35,13 +36,21 @@ def compile():
     assert 0 == p.returncode
 
 
-def print_text(in_file_name, out_file_name, obj):
+def qt_print_text(in_file_name, out_file_name, obj):
     args = [settings.PRINTTEXT_EXEC, in_file_name, out_file_name]
     print(*args)
     p = subprocess.Popen(args, stdin=subprocess.PIPE)
     p.communicate('{}\n'.format(common_tools.to_jsonl(obj)).encode())
     p.wait()
     assert 0 == p.returncode
+qt_print_text.concurrent = True
+
+def plt_print_text(*args):
+    print('plot_tools.print_text', *args[:-1])
+    plot_tools.print_text(*args)
+plt_print_text.concurrent = False
+
+print_text = plt_print_text
 
 
 def main():
@@ -55,15 +64,6 @@ def main():
     with open('../detection/products/detections.jsonl') as f:
         dts = f.read().splitlines()
     assert len(gts) == len(dts)
-
-    gtdict = dict()
-    dtdict = dict()
-    for gt, dt in zip(gts, dts):
-        gtobj = json.loads(gt.strip())
-        dtobj = json.loads(dt.strip())
-        image_id = gtobj['image_id']
-        gtdict[image_id] = gtobj
-        dtdict[image_id] = dtobj
 
     def gt2array(gt, draw_ignore):
         color = '#f00'
@@ -149,19 +149,20 @@ def main():
             return True
         return list(filter(foo, drawlist))
 
-    selected = gtdict.keys()
+    selected = [(o['image_id'], 0, 0) for i, o in enumerate(data_list['test_det']) if i % 1000 == 0]
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
         os.makedirs(settings.PRINTTEXT_DRAWING_DIR)
     tasks = []
     for image_id, x, y in sorted(selected):
-        gt = gtdict[image_id]
-        dt = dtdict[image_id]
+        i = [o['image_id'] for o in data_list['test_det']].index(image_id)
+        gt = json.loads(gts[i])
+        dt = json.loads(dts[i])
         crop = (x, y, 2048, 2048)
         file_name = os.path.join(settings.TEST_IMAGE_DIR, gt['file_name'])
         tasks.append((
             file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.png'.format(image_id, *crop)),
+            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
             {
                 'boxes': remove_outside(gt2array(gt, draw_ignore=True), crop),
                 'crop': crop,
@@ -170,14 +171,18 @@ def main():
         ))
         tasks.append((
             file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.png'.format(image_id, *crop)),
+            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
             {
                 'boxes': remove_outside(dt2array(dt, gt, draw_ignore=True), crop),
                 'crop': crop,
                 'place': 'force',
             }
         ))
-    common_tools.multithreaded(print_text, tasks, num_thread=cpu_count())
+    if print_text.concurrent:
+        common_tools.multithreaded(print_text, tasks, num_thread=cpu_count())
+    else:
+        for task in tasks:
+            print_text(*task)
 
 
 if __name__ == '__main__':
