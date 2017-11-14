@@ -1,4 +1,5 @@
 Jinja2
+matplotlib
 opencv-python
 scikit-image
 scipy

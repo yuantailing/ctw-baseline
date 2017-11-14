@@ -10,11 +10,13 @@ import os
 import plot_tools
 import settings
 import subprocess
+import threading
 
 from multiprocessing import cpu_count
 from pythonapi import anno_tools, common_tools, eval_tools
 
 
+@common_tools.synchronized(threading.Lock())
 def compile():
     pro = os.path.join('printtext-src', 'printtext.pro')
     cwd = os.path.dirname(settings.PRINTTEXT_EXEC)
@@ -37,6 +39,8 @@ def compile():
 
 
 def qt_print_text(in_file_name, out_file_name, obj):
+    if not os.path.isfile(settings.PRINTTEXT_EXEC):
+        compile()
     args = [settings.PRINTTEXT_EXEC, in_file_name, out_file_name]
     print(*args)
     p = subprocess.Popen(args, stdin=subprocess.PIPE)
@@ -54,9 +58,6 @@ print_text = plt_print_text
 
 
 def main():
-    if not os.path.isfile(settings.PRINTTEXT_EXEC):
-        compile()
-
     with open(settings.DATA_LIST) as f:
         data_list = json.load(f)
     with open(settings.TEST_DETECTION_GT) as f:
@@ -133,7 +134,7 @@ def main():
 
         a = list()
         colormap = {0: '#0ff', 1: '#0f0', 2: '#ff0'}
-        for i in range(dt_topnum):
+        for i in reversed(range(dt_topnum)):
             bbox, text, score = dt[i]
             taken = dt_matched[i]
             if 2 != taken or draw_ignore:
@@ -150,6 +151,8 @@ def main():
         return list(filter(foo, drawlist))
 
     selected = [(o['image_id'], 0, 0) for i, o in enumerate(data_list['test_det']) if i % 1000 == 0]
+    draw_gt = False
+    draw_ignore = False
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
         os.makedirs(settings.PRINTTEXT_DRAWING_DIR)
@@ -160,20 +163,21 @@ def main():
         dt = json.loads(dts[i])
         crop = (x, y, 2048, 2048)
         file_name = os.path.join(settings.TEST_IMAGE_DIR, gt['file_name'])
-        tasks.append((
-            file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
-            {
-                'boxes': remove_outside(gt2array(gt, draw_ignore=True), crop),
-                'crop': crop,
-                'place': 'force',
-            }
-        ))
+        if draw_gt:
+            tasks.append((
+                file_name,
+                os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
+                {
+                    'boxes': remove_outside(gt2array(gt, draw_ignore=draw_ignore), crop),
+                    'crop': crop,
+                    'place': 'force',
+                }
+            ))
         tasks.append((
             file_name,
             os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
             {
-                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=True), crop),
+                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=draw_ignore), crop),
                 'crop': crop,
                 'place': 'force',
             }
