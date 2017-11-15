@@ -201,13 +201,13 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                 if proposal or dtchar[1] == gtchar[1]:
                     miou = iou(dtchar[0], gtchar[0])
                     if miou > iou_thresh:
-                        dt_matches[i_dt].append((i_gt, miou))
+                        dt_matches[i_dt].append((-miou, i_gt))
             for igchar in ig:
                 miou = a_in_b(dtchar[0], igchar[0])
                 if miou > iou_thresh:
                     dt_ig[i_dt] = True
         for matches in dt_matches:
-            matches.sort(key=lambda t: -t[1])  # sort must be stable, otherwise you shoule use key=lambda t: (-t[1], t[0])
+            matches.sort()
 
         for szname, size_range in size_ranges:
             def in_size(bbox):
@@ -217,7 +217,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
             dt_matched = [0 if in_size(o[0]) and False == b else 2 for o, b in zip(dt, dt_ig)]
             gt_taken = [(0, None) if in_size(o[0]) else (2, None) for o in gt]
             for i_dt, matches in enumerate(dt_matches):
-                for i_gt, _ in matches:
+                for _, i_gt in matches:
                     if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt][0]:
                         if 0 == gt_taken[i_gt][0]:
                             dt_matched[i_dt] = 1
