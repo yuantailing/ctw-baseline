@@ -123,18 +123,12 @@ def main():
                     else:
                         dt_matched[i_dt] = 2
 
-        allowed = len(gt)
-        dt_topnum = 0
-        for ms in enumerate(dt_matched):
-            if not allowed:
-                break
-            dt_topnum += 1
-            if ms != 2:
-                allowed -= 1
-
         a = list()
-        colormap = {0: '#ff0', 1: '#0f0', 2: '#ff0'}
-        for i in range(dt_topnum):
+        minscore = 1.
+        colormap = {0: '#ff0', 1: '#0f0', 2: '#0ff'}
+        for i in range(len(dt)):
+            if len(a) >= len(gt):
+                break
             bbox, text, score = dt[i]
             taken = dt_matched[i]
             if 2 != taken or draw_ignore:
@@ -144,15 +138,16 @@ def main():
                         flag = False
                 if flag:
                     a.append({'bbox': bbox, 'text': text or '■', 'color': colormap[taken]})
+                    minscore = score
         if draw_proposal:
             for o in sorted(dtobj['proposals'], key=lambda o: -o['score']):
                 bbox, score = o['bbox'], o['score']
-                if dt_topnum > 0 and score >= dt[dt_topnum - 1][2]:
+                if score >= minscore:
                     s = 0
                     for igbbox, _ in ig:
                         s += eval_tools.a_in_b(bbox, igbbox)
-                    for dtbbox, _, _ in dt[:dt_topnum]:
-                        s += eval_tools.a_in_b(bbox, dtbbox)
+                    for o in a:
+                        s += max(eval_tools.a_in_b(o['bbox'], bbox), eval_tools.a_in_b(bbox, o['bbox']))
                     if s <= settings.IOU_THRESH:
                         a.append({'bbox': bbox, 'text': '', 'color': '#00f'})
         return list(reversed(a))
