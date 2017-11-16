@@ -154,12 +154,13 @@ def main():
         'figure.subplot.left': .06,
         'figure.subplot.right': .98,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(10, 3))
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, xticks_font_fname=get_chinese_ttf())
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.png'), dpi=600)
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.pdf'))
         plt.close()
 
     # num_char
@@ -181,6 +182,7 @@ def main():
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .16,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(5, 3))
         plt.xlim((0, len(labels) + 1))
@@ -210,6 +212,7 @@ def main():
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .16,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(5, 3))
         plt.xlim((0, len(labels) + 1))
@@ -241,6 +244,7 @@ def main():
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .10,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(6, 3))
         plt.xlim((0, len(labels) + 1))
@@ -264,6 +268,7 @@ def main():
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .10,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(6, 3))
         plt.xlim((.3, .7 + len(labels)))

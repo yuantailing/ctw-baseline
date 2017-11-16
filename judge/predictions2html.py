@@ -139,7 +139,8 @@ def main(models, n):
         row_models = []
         for preds_model in preds:
             texts, probs = preds_model[i]
-            prob_text = '{:.1f}%'.format(round(probs[0] * 1000) / 10.)
+            prob_text = '{:5.1f}%'.format(round(probs[0] * 1000) / 10.)
+            prob_text = prob_text.replace('  ', '&nbsp;')
             row_models.append({
                 'text': texts[0],
                 'prob': prob_text,
@@ -154,4 +155,4 @@ def main(models, n):
 
 
 if __name__ == '__main__':
-    main(cfgs, 200)
+    main(cfgs, 20)

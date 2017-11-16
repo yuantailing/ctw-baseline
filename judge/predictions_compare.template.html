@@ -9,16 +9,17 @@ td img { height: 32px; }
 td.correct { background-color: #dfd; }
 td.error { background-color: #fdd; }
 td { padding-top: 0; padding-bottom: 0; }
+th { width: 80px;}
 	</style>
 	</head>
 	<body>
 		<h1>Predictions</h1>
 		<table>
 			<tr>
-				<th align="center">image</th>
-				<th align="center">text</th>
+				<th align="center">instance</th>
+				<th align="center">category</th>
 			{% for model_name in models %}
-				<th align="center" colspan="2">{{ model_name }}</th>
+				<th align="center">{{ model_name }}</th>
 			{% endfor %}
 			</tr>
 		{% for row in rows %}
@@ -27,9 +28,9 @@ td { padding-top: 0; padding-bottom: 0; }
 				<td align="center">{{ row.ground_truth }}</td>
 			{% for model in row.models %}
 			{% if model.text == row.ground_truth %}
-				<td class="correct" align="center">{{ model.text }}</td><td class="correct" align="right">{{ model.prob }}</td>
+				<td class="correct" align="center">{{ model.text }}{{ model.prob }}</td>
 			{% else %}
-				<td align="center">{{ model.text }}</td><td align="right">{{ model.prob }}</td>
+				<td align="center">{{ model.text }}{{ model.prob }}</td>
 			{% endif %}
 			{% endfor %}
 			</tr>

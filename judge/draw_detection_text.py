@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import matplotlib.pyplot as plt
 import os
 import plot_tools
 import settings
@@ -51,7 +52,10 @@ qt_print_text.concurrent = True
 
 def plt_print_text(*args):
     print('plot_tools.print_text', *args[:-1])
-    plot_tools.print_text(*args)
+    with plt.style.context({
+        'pdf.fonttype': 42,
+    }):
+        plot_tools.print_text(*args)
 plt_print_text.concurrent = False
 
 print_text = plt_print_text
@@ -170,7 +174,7 @@ def main():
         ('2031598', 224, 663, 600, 500),
         ('3026134', 140, 490, 600, 500),
         ('3031589', 1448, 740, 600, 500),
-        ('3032440', 320, 767, 600, 500),
+        ('3032440', 325, 767, 600, 500),
         ('3041012', 850, 800, 600, 500),
     ]
     draw_gt = False
@@ -198,7 +202,7 @@ def main():
             file_name,
             os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
             {
-                'boxes': remove_outside(dt2array(dt, gt, draw_ignore=False, draw_proposal=False), crop),
+                'boxes': dt2array(dt, gt, draw_ignore=False, draw_proposal=False),
                 'crop': crop,
                 'place': 'force',
             }

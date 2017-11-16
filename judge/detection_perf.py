@@ -115,6 +115,7 @@ def draw(report):
         'figure.subplot.left': .05,
         'figure.subplot.right': .98,
         'figure.subplot.top': .96,
+        'pdf.fonttype': 42,
         'legend.loc': 'upper center',
     }):
         plt.figure(figsize=(12, 3))
@@ -131,6 +132,7 @@ def draw(report):
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .12,
         'figure.subplot.top': .94,
+        'pdf.fonttype': 42,
         'legend.loc': 'upper right',
     }):
         plt.figure(figsize=(5.5, 5.5))

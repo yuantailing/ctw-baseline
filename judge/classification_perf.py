@@ -36,9 +36,9 @@ def recall_print(recall, name):
     print(name, end=' ')
     for n, rc_n in sorted(recall['recalls'].items()):
         if recall['n'] > 0:
-            print('{:5.2f}%'.format(rc_n / recall['n'] * 100), end=' ')
+            print('{:4.1f}%'.format(rc_n / recall['n'] * 100), end=' ')
         else:
-            print('{:5.2f}%'.format(0), end=' ')
+            print('{:4.1f}%'.format(0), end=' ')
     print('n={}'.format(recall['n']))
 
 
@@ -121,6 +121,7 @@ def draw_by_models(all):
         'figure.subplot.right': .96,
         'figure.subplot.top': .96,
         'legend.loc': 'upper center',
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(6, 3))
         plt.ylim((0., 1.))
@@ -155,6 +156,7 @@ def draw_by_props(model_name, performance):
         'figure.subplot.right': .98,
         'figure.subplot.top': .96,
         'legend.loc': 'upper center',
+        'pdf.fonttype': 42,
     }):
         plt.figure(figsize=(12, 3))
         plt.xlim((.3, .7 + len(labels)))

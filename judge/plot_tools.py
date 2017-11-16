@@ -37,11 +37,11 @@ def draw_bar(data, labels, width=None, xticks_font_fname=None, legend_kwargs=dic
 
 
 def print_text(in_file_name, out_file_name, obj):
-    dpi = 72
+    dpi = 100
     img = cv2.imread(in_file_name)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     boxes, crop = obj['boxes'], obj['crop']
-    img = img[crop[1]:crop[1] + crop[3], crop[0]:crop[0]+crop[2]]
+    img = img[crop[1]:crop[1] + crop[3], crop[0]:crop[0] + crop[2]]
 
     with plt.style.context({
         'figure.subplot.left': 0.,
@@ -54,20 +54,24 @@ def print_text(in_file_name, out_file_name, obj):
         'axes.spines.top': False,
     }):
         font = FontProperties(fname=get_chinese_ttf())
-        plt.figure(figsize=(crop[2] / dpi, crop[3] / dpi))
+        plt.figure(figsize=(crop[2] / dpi, crop[3] / dpi), dpi=dpi)
         plt.xticks([])
         plt.yticks([])
         ax = plt.gca()
-        plt.imshow(img / 255)
+        plt.imshow(img)
         for o in boxes:
             bbox, text, color = o['bbox'], o['text'], o['color']
+            bbox = [bbox[0] - crop[0], bbox[1] - crop[1], bbox[2], bbox[3]]
+            if bbox[0] + bbox[2] < 0 or bbox[0] >= crop[2] or bbox[1] + bbox[3] < 0 or bbox[1] >= crop[3]:
+                continue
             if color.startswith('#'):
                 color = color[1:]
                 if 3 == len(color):
                     color = tuple(int(s, 16) / 15 for s in color)
-            bbox = [bbox[0] - crop[0], bbox[1] - crop[1], bbox[2], bbox[3]]
             ax.add_patch(patches.Rectangle(bbox[:2], *bbox[2:], fill=False, color=color))
-            ax.text(bbox[0], bbox[1], text, fontproperties=font, fontsize=14, color=color,
+            if bbox[0] < 0 or bbox[1] < 0:  # case test outside of crop
+                continue
+            ax.text(bbox[0], bbox[1], text, fontproperties=font, fontsize=10, color=color,
                     horizontalalignment='right', verticalalignment='bottom')
-        plt.savefig(out_file_name, dpi=dpi * 2)
+        plt.savefig(out_file_name)
         plt.close()
