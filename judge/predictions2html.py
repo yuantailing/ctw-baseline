@@ -44,7 +44,7 @@ cfgs = [
 ]
 
 for cfg in cfgs:
-    cfg['predictions_file_path'] = os.path.join('..', 'benchmark', 'products', 'predictions_{}.jsonl'.format(cfg['model_name']))
+    cfg['predictions_file_path'] = os.path.join('..', 'classification', 'products', 'predictions_{}.jsonl'.format(cfg['model_name']))
 
 
 def crop(image, bbox, maxlong):
