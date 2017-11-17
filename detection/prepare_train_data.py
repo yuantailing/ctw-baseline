@@ -14,7 +14,7 @@ import settings
 
 from jinja2 import Template
 from pythonapi import anno_tools, common_tools
-from six.moves import queue, urllib
+from six.moves import queue
 
 
 def write_darknet_data():
@@ -54,11 +54,6 @@ def write_darknet_names():
             f.write('{}\n'.format(i))
 
 
-def download_pretrain():
-    urllib.request.urlretrieve('https://pjreddie.com/media/files/darknet19_448.conv.23',
-                               settings.DARKNET_PRETRAIN)
-
-
 def crop_train_images():
     imshape = (2048, 2048, 3)
     cropshape = (settings.TRAIN_IMAGE_SIZE // 4, settings.TRAIN_IMAGE_SIZE // 4)
@@ -71,9 +66,8 @@ def crop_train_images():
     if not os.path.isdir(settings.TRAINVAL_CROPPED_DIR):
         os.makedirs(settings.TRAINVAL_CROPPED_DIR)
 
-    lines = []
     with open(settings.TRAIN) as f:
-        lines += f.read().splitlines()
+        lines = f.read().splitlines()
     with open(settings.VAL) as f:
         lines += f.read().splitlines()
 
@@ -153,9 +147,7 @@ def main():
     write_darknet_data()
     write_darknet_cfg()
     write_darknet_names()
-    if not os.path.isfile(settings.DARKNET_PRETRAIN):
-        print('download', settings.DARKNET_PRETRAIN)
-        download_pretrain()
+    assert os.path.isfile(settings.DARKNET_PRETRAIN), 'please download {} to {}'.format('https://pjreddie.com/media/files/darknet19_448.conv.23', settings.DARKNET_PRETRAIN)
     if not common_tools.exists_and_newer(settings.DARKNET_TRAIN_LIST, settings.CATES):
         crop_train_images()
 
