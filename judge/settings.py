@@ -19,7 +19,7 @@ PROPOSAL_EXPLORE       = 'products/explore_pro.html'
 PROPOSAL_REPORT        = 'products/proposal_report.json'
 PRINTTEXT_EXEC         = 'products/build-printtext-release/printtext'
 PRINTTEXT_DRAWING_DIR  = 'products/printtext-drawing'
-PROPS_SAMPLE_DIR       = 'products/props-samples'
+ATTR_SAMPLE_DIR        = 'products/attr-samples'
 PLOTS_DIR              = 'products/plots'
 
 
@@ -30,7 +30,7 @@ SIZE_RANGES            = [
     ('medium', (16., 32.)),
     ('small', (0., 16.)),
 ]
-PROPERTIES             = [
+ATTRIBUTES             = [
     'occluded',
     'bgcomplex',
     'distorted',

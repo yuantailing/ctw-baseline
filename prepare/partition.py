@@ -236,7 +236,7 @@ def main():
                 if not char['is_chinese']:
                     continue
                 proposals.append({'adjusted_bbox': char['adjusted_bbox'], 'polygon': char['polygon']})
-                gt.append({'text': char['text'], 'properties': char['properties'], 'size': char['adjusted_bbox'][-2:]})
+                gt.append({'text': char['text'], 'attributes': char['attributes'], 'size': char['adjusted_bbox'][-2:]})
             anno.pop('annotations')
             anno.pop('ignore')
             anno['proposals'] = proposals

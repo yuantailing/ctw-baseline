@@ -40,7 +40,7 @@ def main():
     sum_not_chinese = {'trainval': 0, 'test': 0}
     sum_ignore = {'trainval': 0, 'test': 0}
     longsizes = {'trainval': list(), 'test': list()}
-    props = {szname: {prop: 0 for prop in settings.PROPERTIES + ['__all__']} for szname, _ in settings.SIZE_RANGES}
+    attrs = {szname: {attr: 0 for attr in settings.ATTRIBUTES + ['__all__']} for szname, _ in settings.SIZE_RANGES}
     with open(settings.TRAIN) as f, open(settings.VAL) as f2:
         for line in f.read().splitlines() + f2.read().splitlines():
             anno = json.loads(line.strip())
@@ -56,9 +56,9 @@ def main():
                     longsizes['trainval'].append(longsize)
                     for szname, szrange in settings.SIZE_RANGES:
                         if szrange[0] <= longsize < szrange[1]:
-                            for prop in char['properties']:
-                                props[szname][prop] += 1
-                            props[szname]['__all__'] += 1
+                            for attr in char['attributes']:
+                                attrs[szname][attr] += 1
+                            attrs[szname]['__all__'] += 1
                 else:
                     sum_not_chinese['trainval'] += 1
             assert 0 < len(uniq)
@@ -80,9 +80,9 @@ def main():
                 longsizes['test'].append(longsize)
                 for szname, szrange in settings.SIZE_RANGES:
                     if szrange[0] <= longsize < szrange[1]:
-                        for prop in char['properties']:
-                            props[szname][prop] += 1
-                        props[szname]['__all__'] += 1
+                        for attr in char['attributes']:
+                            attrs[szname][attr] += 1
+                        attrs[szname]['__all__'] += 1
             assert 0 < len(uniq)
             num_char[num]['test'] += 1
             num_uniq_char[len(uniq)]['test'] += 1
@@ -101,9 +101,9 @@ def main():
                     longsizes['test'].append(max(char['adjusted_bbox'][2], char['adjusted_bbox'][3]))
                     for szname, szrange in settings.SIZE_RANGES:
                         if szrange[0] <= longsize < szrange[1]:
-                            for prop in char['properties']:
-                                props[szname][prop] += 1
-                            props[szname]['__all__'] += 1
+                            for attr in char['attributes']:
+                                attrs[szname][attr] += 1
+                            attrs[szname]['__all__'] += 1
                 else:
                     sum_not_chinese['test'] += 1
             assert 0 < len(uniq)
@@ -253,16 +253,16 @@ def main():
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_instance_size.pdf'))
         plt.close()
 
-    # properties percentage
+    # attributes percentage
     data = [
         [
             {
                 'legend': szname,
-                'data': [props[szname][prop] / props[szname]['__all__'] * 100 for prop in settings.PROPERTIES],
+                'data': [attrs[szname][attr] / attrs[szname]['__all__'] * 100 for attr in settings.ATTRIBUTES],
             }
         ] for szname, szrange in settings.SIZE_RANGES
     ]
-    labels = settings.PROPERTIES
+    labels = settings.ATTRIBUTES
     with plt.style.context({
         'figure.subplot.left': .12,
         'figure.subplot.right': .96,
@@ -275,7 +275,7 @@ def main():
         plt.grid(which='major', axis='y', linestyle='dotted')
         plt.gca().yaxis.set_major_formatter(plt.FuncFormatter('{:.0f}%'.format))
         plot_tools.draw_bar(data, labels, width=.18)
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_properties.pdf'))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_attributes.pdf'))
         plt.close()
 
 

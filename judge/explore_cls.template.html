@@ -30,14 +30,14 @@
 		</div>
 	</div>
 	<div class="template" hidden>
-		<div class="property-selector-group col-md-2">
-			<div><label style="font-weight: normal;"><input id="check-property" type="checkbox" checked><span id="property">property</span></label></div>
-			<div><label style="font-weight: normal;"><input id="check-no-property" type="checkbox" checked><span id="no-property">~property</span></label></div>
+		<div class="attribute-selector-group col-md-2">
+			<div><label style="font-weight: normal;"><input id="check-attribute" type="checkbox" checked><span id="attribute">attribute</span></label></div>
+			<div><label style="font-weight: normal;"><input id="check-no-attribute" type="checkbox" checked><span id="no-attribute">~attribute</span></label></div>
 		</div>
 	</div>
 	<script>
 var data = {{ performance_all }};
-var properties = {{ properties }};
+var attributes = {{ attributes }};
 
 $(document).ready(function() {
 	var ctx = document.getElementById('chart').getContext('2d');
@@ -60,16 +60,16 @@ $(document).ready(function() {
 		all_models = [];
 		$.map(data, function(model) {
 			model_rc = [];
-			$.each(model.performance, function(szname, prop_rcs) {
+			$.each(model.performance, function(szname, attr_rcs) {
 				var sz_rc = recall_empty();
-				$.each(prop_rcs.properties, function(id, rcs) {
+				$.each(attr_rcs.attributes, function(id, rcs) {
 					var ok = true;
 					$.map(excepts, function(ex) {
 						if (ex.contains) {
-							if (0 != (id & 2 ** ex.property))
+							if (0 != (id & 2 ** ex.attribute))
 								ok = false;
 						} else {
-							if (0 == (id & 2 ** ex.property))
+							if (0 == (id & 2 ** ex.attribute))
 								ok = false;
 						}
 					});
@@ -120,13 +120,13 @@ $(document).ready(function() {
 		}
 	}
 	console.assert(0 < data.length);
-	$.each(properties, function(k, v) {
+	$.each(attributes, function(k, v) {
 		var parent = $('.selectors');
-		var div = $('.template .property-selector-group').clone();
-		div.find('#property').text(v);
-		div.find('#no-property').text('~' + v);
-		div.find('#check-property').data({contains: true, property: k});
-		div.find('#check-no-property').data({contains: false, property: k});
+		var div = $('.template .attribute-selector-group').clone();
+		div.find('#attribute').text(v);
+		div.find('#no-attribute').text('~' + v);
+		div.find('#check-attribute').data({contains: true, attribute: k});
+		div.find('#check-no-attribute').data({contains: false, attribute: k});
 		parent.append(div);
 	});
 	update_stat();

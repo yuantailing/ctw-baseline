@@ -12,7 +12,7 @@ from . import anno_tools
 from collections import defaultdict
 
 
-def classification_recall(ground_truth, prediction, recall_n, properties, size_ranges):
+def classification_recall(ground_truth, prediction, recall_n, attributes, size_ranges):
     def error(s):
         return {'error': 1, 'msg': s}
 
@@ -25,7 +25,7 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
     stat = dict()
     for szname, _ in size_ranges:
         stat[szname] = {
-            'properties': [recall_empty() for _ in range(2 ** len(properties))],
+            'attributes': [recall_empty() for _ in range(2 ** len(attributes))],
             'texts': defaultdict(recall_empty),
         }
     gts = ground_truth.splitlines()
@@ -61,9 +61,9 @@ def classification_recall(ground_truth, prediction, recall_n, properties, size_r
             for szname, rng in size_ranges:
                 if rng[0] <= longsize < rng[1]:
                     k = 0
-                    for prop in cgt['properties']:
-                        k += 2 ** properties.index(prop)
-                    stat[szname]['properties'][k] = recall_add(stat[szname]['properties'][k], thisrc)
+                    for attr in cgt['attributes']:
+                        k += 2 ** attributes.index(attr)
+                    stat[szname]['attributes'][k] = recall_add(stat[szname]['attributes'][k], thisrc)
                 stat[szname]['texts'][cgt['text']] = recall_add(stat[szname]['texts'][cgt['text']], thisrc)
     for szname, _ in size_ranges:
         stat[szname]['texts'] = dict(stat[szname]['texts'])
@@ -93,7 +93,7 @@ def a_in_b(bbox_0, bbox_1):
     return AN / A0
 
 
-def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou_thresh, proposal=False, echo=False):
+def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou_thresh, proposal=False, echo=False):
     def error(s):
         return {'error': 1, 'msg': s}
 
@@ -108,7 +108,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         return [xmin, ymin, xmax - xmin, ymax - ymin]
 
     def AP_empty():
-        return {'n': 0, 'detections': [], 'properties': [{'n': 0, 'recall': 0} for _ in range(2 ** len(properties))]}
+        return {'n': 0, 'detections': [], 'attributes': [{'n': 0, 'recall': 0} for _ in range(2 ** len(attributes))]}
 
     def AP_compute(m):
         if 0 == m['n']:
@@ -192,7 +192,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         for char in anno_tools.each_char(gtobj):
             if char['is_chinese']:
                 charset.add(char['text'])
-                gt.append((char['adjusted_bbox'], char['text'], char['properties']))
+                gt.append((char['adjusted_bbox'], char['text'], char['attributes']))
 
         dt_matches = [[] for i in range(len(dt))]
         dt_ig = [False] * len(dt)
@@ -234,26 +234,26 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
                     k = 0
-                    for prop in gtchar[2]:
-                        k += 2 ** properties.index(prop)
-                    thism['properties'][k]['n'] += 1
+                    for attr in gtchar[2]:
+                        k += 2 ** attributes.index(attr)
+                    thism['attributes'][k]['n'] += 1
                     if taken != 0 and dt_id in top_dt:
-                        thism['properties'][k]['recall'] += 1
+                        thism['attributes'][k]['recall'] += 1
 
     performance = dict()
     for szname, _ in size_ranges:
         n = 0
         mAP = 0.
-        szprops = AP_empty()['properties']
+        szattrs = AP_empty()['attributes']
         texts = {c: 0. for c in charset}
         stat_all = AP_empty()
         for text, stat in m[szname].items():
             n += stat['n']
             AP, _ = AP_compute(stat)
             mAP += AP * stat['n']
-            for k, o in enumerate(szprops):
-                o['n'] += stat['properties'][k]['n']
-                o['recall'] += stat['properties'][k]['recall']
+            for k, o in enumerate(szattrs):
+                o['n'] += stat['attributes'][k]['n']
+                o['recall'] += stat['attributes'][k]['recall']
             if text in charset:
                 texts[text] = AP
             stat_all['n'] += stat['n']
@@ -263,7 +263,7 @@ def detection_mAP(ground_truth, detection, properties, size_ranges, max_det, iou
         performance[szname] = {
             'n': n,
             'mAP': AP_all if proposal else mAP / n,
-            'properties': szprops,
+            'attributes': szattrs,
             'texts': texts,
             'AP': AP_all,
             'curve': curve,

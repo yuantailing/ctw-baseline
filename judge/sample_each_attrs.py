@@ -33,24 +33,24 @@ def main():
         for char in anno_tools.each_char(anno):
             if not char['is_chinese']:
                 continue
-            for prop in settings.PROPERTIES:
-                if prop in char['properties']:
-                    belongs[prop].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
+            for attr in settings.ATTRIBUTES:
+                if attr in char['attributes']:
+                    belongs[attr].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
                 else:
-                    belongs['not-{}'.format(prop)].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
+                    belongs['not-{}'.format(attr)].append((anno['image_id'], anno['file_name'], char['adjusted_bbox'], i))
             i += 1
 
-    for prop, imgset in sorted(belongs.items()):
+    for attr, imgset in sorted(belongs.items()):
         imgset = random.sample(imgset, 200)
-        root = os.path.join(settings.PROPS_SAMPLE_DIR, prop)
-        resized_root = os.path.join(settings.PROPS_SAMPLE_DIR, '{}-resized'.format(prop))
+        root = os.path.join(settings.ATTR_SAMPLE_DIR, attr)
+        resized_root = os.path.join(settings.ATTR_SAMPLE_DIR, '{}-resized'.format(attr))
         if not os.path.isdir(root):
             os.makedirs(root)
         if not os.path.isdir(resized_root):
             os.makedirs(resized_root)
         for i, (image_id, file_name, bbox, idx_in_img) in enumerate(imgset):
             if i % 100 == 0:
-                print(prop, i, '/', len(imgset))
+                print(attr, i, '/', len(imgset))
             image = cv2.imread(os.path.join(settings.TRAINVAL_IMAGE_DIR, file_name))
             cropped_file_path = os.path.join(root, '{}_{}.png'.format(image_id, idx_in_img))
             resized_file_path = os.path.join(resized_root, '{}_{}.png'.format(image_id, idx_in_img))

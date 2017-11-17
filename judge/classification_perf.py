@@ -51,7 +51,7 @@ def main():
             pr = f.read()
         report = eval_tools.classification_recall(
             gt, pr,
-            settings.RECALL_N, settings.PROPERTIES, settings.SIZE_RANGES
+            settings.RECALL_N, settings.ATTRIBUTES, settings.SIZE_RANGES
         )
         assert 0 == report['error'], report['msg']
         all.append({
@@ -69,7 +69,7 @@ def main():
         f.write(template.render({
             'chartjs': get_chartjs(),
             'performance_all': json.dumps(jdata, sort_keys=True),
-            'properties': settings.PROPERTIES,
+            'attributes': settings.ATTRIBUTES,
         }))
 
     def recall_empty():
@@ -84,11 +84,11 @@ def main():
     for report_obj in all:
         print('[', report_obj['model_name'], ']')
         performance = report_obj['performance']
-        for i, prop in zip(range(-1, len(settings.PROPERTIES)), ['__all__'] + settings.PROPERTIES):
+        for i, attr in zip(range(-1, len(settings.ATTRIBUTES)), ['__all__'] + settings.ATTRIBUTES):
             for szname, _ in sorted(settings.SIZE_RANGES):
-                name = '{:12s} & {:12s}'.format(szname, prop)
+                name = '{:12s} & {:12s}'.format(szname, attr)
                 recall = recall_empty()
-                for k, o in enumerate(performance[szname]['properties']):
+                for k, o in enumerate(performance[szname]['attributes']):
                     if i == -1 or int(k) & 2 ** i:
                         recall = recall_add(recall, o)
                 recall_print(recall, name)
@@ -97,13 +97,13 @@ def main():
 
     draw_by_models(all)
     for report_obj in all:
-        draw_by_props(**report_obj)
+        draw_by_attrs(**report_obj)
 
 
 def draw_by_models(all):
-    def model_recall(prop_perfs):
+    def model_recall(attr_perfs):
         n = rc = 0
-        for k, o in enumerate(prop_perfs):
+        for k, o in enumerate(attr_perfs):
             n += o['n']
             rc += o['recalls'][1]
         return 0. if n == 0 else rc / n
@@ -111,7 +111,7 @@ def draw_by_models(all):
         [
             {
                 'legend': szname,
-                'data': [model_recall(model['performance'][szname]['properties']) for model in all],
+                'data': [model_recall(model['performance'][szname]['attributes']) for model in all],
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
@@ -132,12 +132,12 @@ def draw_by_models(all):
         plt.close()
 
 
-def draw_by_props(model_name, performance):
-    def prop_recall(prop_perfs, prop_id):
-        m = len(settings.PROPERTIES)
+def draw_by_attrs(model_name, performance):
+    def attr_recall(attr_perfs, attr_id):
+        m = len(settings.ATTRIBUTES)
         n = rc = 0
-        for k, o in enumerate(prop_perfs):
-            if prop_id == -1 or (prop_id < m and 0 != int(k) & 2 ** prop_id) or (m <= prop_id and 0 == int(k) & 2 ** (prop_id - m)):
+        for k, o in enumerate(attr_perfs):
+            if attr_id == -1 or (attr_id < m and 0 != int(k) & 2 ** attr_id) or (m <= attr_id and 0 == int(k) & 2 ** (attr_id - m)):
                 n += o['n']
                 rc += o['recalls'][1]
         return 0. if n == 0 else rc / n
@@ -146,11 +146,11 @@ def draw_by_props(model_name, performance):
         [
             {
                 'legend': szname,
-                'data': [prop_recall(performance[szname]['properties'], i) for i in range(-1, 2 * len(settings.PROPERTIES))],
+                'data': [attr_recall(performance[szname]['attributes'], i) for i in range(-1, 2 * len(settings.ATTRIBUTES))],
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
-    labels = ['all'] + settings.PROPERTIES + list(map('~{}'.format, settings.PROPERTIES))
+    labels = ['all'] + settings.ATTRIBUTES + list(map('~{}'.format, settings.ATTRIBUTES))
     with plt.style.context({
         'figure.subplot.left': .05,
         'figure.subplot.right': .98,
@@ -164,7 +164,7 @@ def draw_by_props(model_name, performance):
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
         plt.ylabel('accuracy')
-        plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_props_size_{}.pdf'.format(model_name)))
+        plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_attr_size_{}.pdf'.format(model_name)))
         plt.close()
 
 

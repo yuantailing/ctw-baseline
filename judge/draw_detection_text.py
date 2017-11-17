@@ -99,7 +99,7 @@ def main():
         for char in anno_tools.each_char(gtobj):
             if char['is_chinese']:
                 charset.add(char['text'])
-                gt.append((char['adjusted_bbox'], char['text'], char['properties']))
+                gt.append((char['adjusted_bbox'], char['text'], char['attributes']))
 
         dt_matches = [[] for i in range(len(dt))]
         dt_ig = [False] * len(dt)
