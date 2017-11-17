@@ -71,7 +71,7 @@ def main():
                 belongs[attr].append(i)
             else:
                 belongs['not-{}'.format(attr)].append(i)
-    x, y, cropsize = 50, 20, 32
+    x, y, cropsize = 25, 20, 32
     for attr, imgset in sorted(belongs.items()):
         imgset = random.sample(imgset, x * y)
         if not os.path.isdir(settings.ATTR_SAMPLE_DIR):
