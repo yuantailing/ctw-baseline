@@ -59,7 +59,7 @@ def main():
             return settings.ATTRIBUTES[attr_id]
         else:
             return r'$\sim${}'.format(settings.ATTRIBUTES[attr_id - len(settings.ATTRIBUTES)])
-    
+
     for split in ['trainval', 'test']:
         for i in range(2 * len(settings.ATTRIBUTES) - 1):
             for j in range(i + 1, 2 * len(settings.ATTRIBUTES)):

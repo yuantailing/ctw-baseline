@@ -16,7 +16,7 @@ from pythonapi import eval_tools
 
 def main():
     assert six.PY3
-    random.seed(0)    
+    random.seed(0)
     with open(settings.TEST_CLASSIFICATION_GT) as f:
         gt = f.read()
     all = list()
