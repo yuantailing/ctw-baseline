@@ -156,15 +156,6 @@ def main():
                         a.append({'bbox': bbox, 'text': '', 'color': '#00f'})
         return list(reversed(a))
 
-    def remove_outside(drawlist, crop):
-        def foo(o):
-            x, y, w, h = o['bbox']
-            cx, cy, cw, ch = crop
-            if x + w < cx or x >= cx + cw or y + h < cy or y >= cy + ch:
-                return False
-            return True
-        return list(filter(foo, drawlist))
-
     selected = [
         ('1009894', 950, 740, 600, 500),
         ('1017943', 0, 700, 600, 500),
@@ -193,7 +184,7 @@ def main():
                 file_name,
                 os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
                 {
-                    'boxes': remove_outside(gt2array(gt, draw_ignore=True), crop),
+                    'boxes': gt2array(gt, draw_ignore=True),
                     'crop': crop,
                     'place': 'force',
                 }

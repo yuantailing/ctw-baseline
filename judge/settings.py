@@ -26,8 +26,8 @@ PLOTS_DIR              = 'products/plots'
 
 RECALL_N               = (1, 5)
 SIZE_RANGES            = [
-    ('all', (0., 2048.)),
-    ('large', (32., 2048.)),
+    ('all', (0., 4096.)),
+    ('large', (32., 4096.)),
     ('medium', (16., 32.)),
     ('small', (0., 16.)),
 ]
