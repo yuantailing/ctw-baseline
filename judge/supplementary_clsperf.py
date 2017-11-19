@@ -81,7 +81,6 @@ def main():
             if j == i + len(settings.ATTRIBUTES):
                 continue
             s = r'{} & \& & {}'.format(trans(i), trans(j))
-            max_rc = 0.
             for szname, _ in settings.SIZE_RANGES:
                 rc = recall_empty()
                 for k, o in enumerate(performance[szname]['attributes']):
@@ -89,18 +88,7 @@ def main():
                         rc = recall_add(rc, o)
                 if rc['n'] > 0:
                     this_rc = round(rc['recalls'][1] / rc['n'] * 100, 1)
-                    max_rc = max(max_rc, this_rc)
-            for szname, _ in settings.SIZE_RANGES:
-                rc = recall_empty()
-                for k, o in enumerate(performance[szname]['attributes']):
-                    if check(k, i) and check(k, j):
-                        rc = recall_add(rc, o)
-                if rc['n'] > 0:
-                    this_rc = round(rc['recalls'][1] / rc['n'] * 100, 1)
-                    if this_rc == max_rc:
-                        s += r' & \textbf{' + '{:.1f}'.format(this_rc) + '}'
-                    else:
-                        s += ' & {:.1f}'.format(this_rc)
+                    s += ' & {:.1f}'.format(this_rc)
                 else:
                     s += ' & -'
             s += r' \\'
