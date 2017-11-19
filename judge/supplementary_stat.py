@@ -60,22 +60,22 @@ def main():
         else:
             return r'$\sim${}'.format(settings.ATTRIBUTES[attr_id - len(settings.ATTRIBUTES)])
 
-    for split in ['trainval', 'test']:
-        for i in range(2 * len(settings.ATTRIBUTES) - 1):
-            for j in range(i + 1, 2 * len(settings.ATTRIBUTES)):
-                if j == i + len(settings.ATTRIBUTES):
-                    continue
-                s = r'{} & \& & {}'.format(trans(i), trans(j))
-                for szname, (lo, hi) in settings.SIZE_RANGES:
-                    n = 0
-                    for k, v in all.items():
-                        if (split, szname) == k[:2]:
-                            if check(k[2], i) and check(k[2], j):
-                                n += v
-                    s += ' & {}'.format(n)
-                s += r' \\'
-                print(s)
-        print()
+    for i in range(2 * len(settings.ATTRIBUTES) - 1):
+        for j in range(i + 1, 2 * len(settings.ATTRIBUTES)):
+            if j == i + len(settings.ATTRIBUTES):
+                continue
+            s = r'{}\!\!\!\!\! & \& & \!\!\!\!\!{}'.format(trans(i), trans(j))
+            for szname, (lo, hi) in settings.SIZE_RANGES:
+                n_train = n_test = 0
+                for k, v in all.items():
+                    if check(k[2], i) and check(k[2], j):
+                        if ('trainval', szname) == k[:2]:
+                            n_train += v
+                        if ('test', szname) == k[:2]:
+                            n_test += v
+                s += ' & {} / {}'.format(n_train, '{:5d}'.format(n_test).replace(' ', r'\,\,\,'))
+            s += r' \\'
+            print(s)
 
 
 if __name__ == '__main__':
