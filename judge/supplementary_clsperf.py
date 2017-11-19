@@ -51,8 +51,16 @@ def main():
             a.append(performance['all']['texts'][char])
     for no, (text, a, cate_id) in enumerate(cates):
         s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/1_' + '{}'.format(cate_id) + '.png} \end{minipage}'
+        max_acc = 0.
         for b in a:
-            s += ' & {:.1f}'.format(b['recalls'][1] / b['n'] * 100)
+            acc = round(b['recalls'][1] / b['n'] * 100, 1)
+            max_acc = max(max_acc, acc)
+        for b in a:
+            acc = round(b['recalls'][1] / b['n'] * 100, 1)
+            if acc == max_acc:
+                s += r' & \textbf{' + '{:.1f}'.format(acc) + '}'
+            else:
+                s += ' & {:.1f}'.format(acc)
         s += ' & {}'.format(b['n'])
         s += r' & {} \\'.format(list(filter(lambda o: o['text'] == text, frequency))[0]['trainval'])
         print(s)
@@ -68,22 +76,33 @@ def main():
             return settings.ATTRIBUTES[attr_id]
         else:
             return r'$\sim${}'.format(settings.ATTRIBUTES[attr_id - len(settings.ATTRIBUTES)])
-    def recall2str(recall):
-        if recall['n'] > 0:
-            return '{:.1f}'.format(recall['recalls'][1] / recall['n'] * 100)
-        else:
-            return '-'
     for i in range(2 * len(settings.ATTRIBUTES) - 1):
         for j in range(i + 1, 2 * len(settings.ATTRIBUTES)):
             if j == i + len(settings.ATTRIBUTES):
                 continue
             s = r'{} & \& & {}'.format(trans(i), trans(j))
+            max_rc = 0.
             for szname, _ in settings.SIZE_RANGES:
                 rc = recall_empty()
                 for k, o in enumerate(performance[szname]['attributes']):
                     if check(k, i) and check(k, j):
                         rc = recall_add(rc, o)
-                s += ' & {}'.format(recall2str(rc))
+                if rc['n'] > 0:
+                    this_rc = round(rc['recalls'][1] / rc['n'] * 100, 1)
+                    max_rc = max(max_rc, this_rc)
+            for szname, _ in settings.SIZE_RANGES:
+                rc = recall_empty()
+                for k, o in enumerate(performance[szname]['attributes']):
+                    if check(k, i) and check(k, j):
+                        rc = recall_add(rc, o)
+                if rc['n'] > 0:
+                    this_rc = round(rc['recalls'][1] / rc['n'] * 100, 1)
+                    if this_rc == max_rc:
+                        s += r' & \textbf{' + '{:.1f}'.format(this_rc) + '}'
+                    else:
+                        s += ' & {:.1f}'.format(this_rc)
+                else:
+                    s += ' & -'
             s += r' \\'
             print(s)
 
