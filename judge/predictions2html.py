@@ -7,10 +7,10 @@ from __future__ import unicode_literals
 
 import base64
 import json
-import operator
-import os
 import math
 import numpy as np
+import operator
+import os
 import settings
 import six
 
