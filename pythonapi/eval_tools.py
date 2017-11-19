@@ -112,7 +112,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
 
     def AP_compute(m):
         if 0 == m['n']:
-            return 0., []
+            return None, []
         acc = []
         rc_inc = []
         m['detections'].sort(key=lambda t: (-t[2], t[1], t[0]))  # sort order by matched ASC, intended to prevent from cheating
@@ -245,24 +245,24 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
         n = 0
         mAP = 0.
         szattrs = AP_empty()['attributes']
-        texts = {c: 0. for c in charset}
+        texts = dict()
         stat_all = AP_empty()
         for text, stat in m[szname].items():
+            if 0 == stat['n']:
+                continue
             n += stat['n']
             AP, _ = AP_compute(stat)
             mAP += AP * stat['n']
             for k, o in enumerate(szattrs):
                 o['n'] += stat['attributes'][k]['n']
                 o['recall'] += stat['attributes'][k]['recall']
-            if text in charset:
-                texts[text] = AP
+            texts[text] = {'AP': AP, 'n': stat['n']}
             stat_all['n'] += stat['n']
             stat_all['detections'] += stat['detections']
-        assert 0 < n
         AP_all, curve = AP_compute(stat_all)
         performance[szname] = {
             'n': n,
-            'mAP': AP_all if proposal else mAP / n,
+            'mAP': AP_all if proposal else mAP / n if n != 0 else None,
             'attributes': szattrs,
             'texts': texts,
             'AP': AP_all,

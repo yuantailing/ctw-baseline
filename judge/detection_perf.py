@@ -88,7 +88,7 @@ def show(report):
             r = 0. if n == 0 else rc / n
             print('{:13s}'.format(attr), 'n', '=', '{:6d}'.format(n), ',', 'recall', '=', percentage(r))
         for char in freq_order[:10]:
-            print(char, percentage(performance[szname]['texts'][char]))
+            print(char, percentage(performance[szname]['texts'].get(char, {'AP': 0.})['AP']))
         print()
 
 
