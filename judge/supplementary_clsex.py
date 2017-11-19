@@ -52,13 +52,13 @@ def main(models, n):
         i = [o['text'] for o in stat_freq].index(text)
         return r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts_dataset/' + '0_{}.png'.format(i) + r'} \end{minipage}'
 
-    for i in sampled:
+    for no, i in enumerate(sampled):
         file_name = '{}.png'.format(i)
         image, gt = gts[i]
         image = misc.toimage(image)
         image.save(os.path.join(root, file_name), format='png')
 
-        s = r'\begin{minipage}{6.0mm} \includegraphics[width=\linewidth]{figure/cls_examples/' + '{}.png'.format(i) + r'} \end{minipage} &' + '\n'
+        s = '{} & '.format(no + 1) + r'\begin{minipage}{6.0mm} \includegraphics[width=\linewidth]{figure/cls_examples/' + '{}.png'.format(i) + r'} \end{minipage} &' + '\n'
         s += '{} &\n'.format(text2minipage(gt['text']))
 
         for j, preds_model in enumerate(preds):

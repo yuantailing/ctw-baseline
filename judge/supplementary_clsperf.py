@@ -16,7 +16,7 @@ from pythonapi import eval_tools
 
 def main():
     assert six.PY3
-    random.seed(0)
+    random.seed(1)
     with open(settings.TEST_CLASSIFICATION_GT) as f:
         gt = f.read()
     all = list()
@@ -49,8 +49,8 @@ def main():
         performance = report_obj['performance']
         for char, a, _ in cates:
             a.append(performance['all']['texts'][char])
-    for text, a, cate_id in cates:
-        s = r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/1_' + '{}'.format(cate_id) + '.png} \end{minipage}'
+    for no, (text, a, cate_id) in enumerate(cates):
+        s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/1_' + '{}'.format(cate_id) + '.png} \end{minipage}'
         for b in a:
             s += ' & {:.1f}'.format(b['recalls'][1] / b['n'] * 100)
         s += ' & {}'.format(b['n'])
