@@ -11,6 +11,7 @@ import os
 import plot_tools
 import settings
 import subprocess
+import sys
 import threading
 
 from multiprocessing import cpu_count
@@ -61,7 +62,7 @@ plt_print_text.concurrent = False
 print_text = plt_print_text
 
 
-def main():
+def work(selected, ext):
     with open(settings.DATA_LIST) as f:
         data_list = json.load(f)
     with open(settings.TEST_DETECTION_GT) as f:
@@ -156,18 +157,6 @@ def main():
                         a.append({'bbox': bbox, 'text': '', 'color': '#00f'})
         return list(reversed(a))
 
-    selected = [
-        ('1009894', 950, 740, 600, 500),
-        ('1017943', 0, 700, 600, 500),
-        ('1024562', 150, 520, 600, 500),
-        ('2001286', 0, 580, 600, 500),
-        ('2026059', 843, 659, 600, 500),
-        ('2031598', 224, 663, 600, 500),
-        ('3026134', 140, 490, 600, 500),
-        ('3031589', 1448, 740, 600, 500),
-        ('3032440', 325, 767, 600, 500),
-        ('3041012', 850, 800, 600, 500),
-    ]
     draw_gt = False
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
@@ -182,7 +171,7 @@ def main():
         if draw_gt:
             tasks.append((
                 file_name,
-                os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.pdf'.format(image_id, *crop)),
+                os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_gt.{}'.format(image_id, crop[0], crop[1], crop[2], crop[3], ext)),
                 {
                     'boxes': gt2array(gt, draw_ignore=True),
                     'crop': crop,
@@ -191,7 +180,7 @@ def main():
             ))
         tasks.append((
             file_name,
-            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.pdf'.format(image_id, *crop)),
+            os.path.join(settings.PRINTTEXT_DRAWING_DIR, '{}_{}_{}_{}_{}_dt.{}'.format(image_id, crop[0], crop[1], crop[2], crop[3], ext)),
             {
                 'boxes': dt2array(dt, gt, draw_ignore=False, draw_proposal=False),
                 'crop': crop,
@@ -204,6 +193,41 @@ def main():
         for task in tasks:
             print_text(*task)
 
+def main():
+    selected = [
+        ('1009894', 950, 740, 600, 500),
+        ('1017943', 0, 700, 600, 500),
+        ('1024562', 150, 520, 600, 500),
+        ('2001286', 0, 580, 600, 500),
+        ('2026059', 843, 659, 600, 500),
+        ('2031598', 224, 663, 600, 500),
+        ('3026134', 140, 490, 600, 500),
+        ('3031589', 1448, 740, 600, 500),
+        ('3032440', 325, 767, 600, 500),
+        ('3041012', 850, 800, 600, 500),
+    ]
+    work(selected, 'pdf')
+
+def supplementary():
+    selected = [
+        ('1001315', 0, 0, 2048, 2048),
+        ('1026027', 0, 0, 2048, 2048),
+        ('1034934', 0, 0, 2048, 2048),
+        ('2004921', 0, 0, 2048, 2048),
+        ('2005538', 0, 0, 2048, 2048),
+        ('2029043', 0, 0, 2048, 2048),
+        ('2031756', 0, 0, 2048, 2048),
+        ('2032443', 0, 0, 2048, 2048),
+        ('3005603', 0, 0, 2048, 2048),
+        ('3017939', 0, 0, 2048, 2048),
+        ('3032428', 0, 0, 2048, 2048),
+        ('3043286', 0, 0, 2048, 2048),
+    ]
+    work(selected, 'pdf')
+
 
 if __name__ == '__main__':
-    main()
+    if 1 < len(sys.argv) and sys.argv[1].startswith('sup'):
+        supplementary()
+    else:
+        main()

@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import cv2
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import operator
 
 from matplotlib.font_manager import FontProperties
 from statistics_in_paper import get_chinese_ttf
@@ -60,18 +61,38 @@ def print_text(in_file_name, out_file_name, obj):
         ax = plt.gca()
         plt.imshow(img)
         for o in boxes:
-            bbox, text, color = o['bbox'], o['text'], o['color']
-            bbox = [bbox[0] - crop[0], bbox[1] - crop[1], bbox[2], bbox[3]]
-            if bbox[0] + bbox[2] < 0 or bbox[0] >= crop[2] or bbox[1] + bbox[3] < 0 or bbox[1] >= crop[3]:
-                continue
+            bbox, polygon, text, color, fontsize = o.get('bbox'), o.get('polygon'), o['text'], o['color'], o.get('fontsize', 10)
+            assert operator.xor(bbox is None, polygon is None)
             if color.startswith('#'):
                 color = color[1:]
                 if 3 == len(color):
                     color = tuple(int(s, 16) / 15 for s in color)
-            ax.add_patch(patches.Rectangle(bbox[:2], *bbox[2:], fill=False, color=color))
-            if bbox[0] < 0 or bbox[1] < 0:  # case test outside of crop
-                continue
-            ax.text(bbox[0], bbox[1], text, fontproperties=font, fontsize=10, color=color,
-                    horizontalalignment='right', verticalalignment='bottom')
+                else:
+                    assert 6 == len(color)
+                    color = tuple(int(color[i * 2:(i + 1) * 2], 16) / 255 for i in range(0, len(color), 2))
+            if bbox is not None:
+                bbox = [bbox[0] - crop[0], bbox[1] - crop[1], bbox[2], bbox[3]]
+                if bbox[0] + bbox[2] < 0 or bbox[0] >= crop[2] or bbox[1] + bbox[3] < 0 or bbox[1] >= crop[3]:
+                    continue
+                ax.add_patch(patches.Rectangle(bbox[:2], *bbox[2:], fill=False, color=color))
+                text_base = (bbox[0], bbox[1])
+            if polygon is not None:
+                xy = list(zip(*polygon))
+                if max(xy[0]) < 0 or min(xy[0]) >= crop[2] or min(xy[1]) < 0 or max(xy[1]) >= crop[3]:
+                    continue
+                def f(x, y):
+                    return x + y
+                fmin = f(*polygon[0])
+                text_base = polygon[0]
+                for xy in polygon[1:]:
+                    if f(*xy) < fmin:
+                        fmin = f(*xy)
+                        text_base = xy
+                ax.add_patch(patches.Polygon(polygon, fill=False, color=color))
+            if text:
+                if text_base[0] < 0 or text_base[0] >= crop[2] or text_base[1] < 0 or text_base[1] >= crop[3]:  # case test outside of crop
+                    continue
+                ax.text(text_base[0], text_base[1], text, fontproperties=font, fontsize=fontsize, color=color,
+                        horizontalalignment='right', verticalalignment='bottom')
         plt.savefig(out_file_name)
         plt.close()
