@@ -148,7 +148,6 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
     for i, (gt, dt) in enumerate(zip(gts, dts)):
         if echo and i % 200 == 0:
             print(i, '/', len(gts))
-            if i > 0: break
 
         try:
             dt = json.loads(dt)
