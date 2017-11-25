@@ -73,7 +73,7 @@ def show(report):
     performance = report['performance']
     for szname, stat in sorted(performance.items()):
         print(szname)
-        for k in ('n', 'mAP', 'AP'):
+        for k in ('n', 'mAP', 'AP', 'mAP_micro'):
             x = stat[k]
             if isinstance(x, float):
                 x = percentage(x)

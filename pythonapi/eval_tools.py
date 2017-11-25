@@ -6,6 +6,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import operator
 import six
 
 from . import anno_tools
@@ -108,16 +109,16 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
         return [xmin, ymin, xmax - xmin, ymax - ymin]
 
     def AP_empty():
-        return {'n': 0, 'detections': [], 'attributes': [{'n': 0, 'recall': 0} for _ in range(2 ** len(attributes))]}
+        return {'n': 0, 'dt': [], 'attributes': [{'n': 0, 'recall': 0} for _ in range(2 ** len(attributes))]}
 
     def AP_compute(m):
         if 0 == m['n']:
             return None, []
         acc = []
         rc_inc = []
-        m['detections'].sort(key=lambda t: (-t[2], t[1], t[0]))  # sort order by matched ASC, intended to prevent from cheating
+        m['dt'].sort(key=lambda t: (-t[2], t[1], t[0]))  # sort order by matched ASC, intended to prevent from cheating
         match_cnt = 0
-        for i, (matched, _, _) in enumerate(m['detections']):
+        for i, (matched, _, _) in enumerate(m['dt']):
             assert matched in (0, 1)
             match_cnt += matched
             acc.append(match_cnt / (i + 1))
@@ -137,6 +138,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
     m = dict()
     for szname, _ in size_ranges:
         m[szname] = defaultdict(AP_empty)
+    AP_imgs = {szname: dict() for szname, _ in size_ranges}
 
     gts = ground_truth.splitlines()
     dts = detection.splitlines()
@@ -146,6 +148,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
     for i, (gt, dt) in enumerate(zip(gts, dts)):
         if echo and i % 200 == 0:
             print(i, '/', len(gts))
+            if i > 0: break
 
         try:
             dt = json.loads(dt)
@@ -183,7 +186,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
             if char['bbox'][2] <= 0 or char['bbox'][3] <= 0:
                 return error('line {} {} candidate {} bbox w or h <= 0'.format(i + 1, eval_type, j + 1))
 
-        dt.sort(key=lambda o: -o['score'])  # sort must be stable, otherwise mAP will be slightly different
+        dt.sort(key=operator.itemgetter('score'), reverse=True)  # sort must be stable, otherwise mAP will be slightly different
         dt = [(o['bbox'], o.get('text'), o['score']) for o in dt]
 
         gtobj = json.loads(gt)
@@ -224,21 +227,26 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
                             gt_taken[i_gt] = (1, i_dt)
                         else:
                             dt_matched[i_dt] = 2
+            m_img = {'n': 0, 'dt': []}
             for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
                 if match_status != 2:
-                    m[szname][dtchar[1]]['detections'].append((match_status, i_dt, dtchar[2]))
+                    m[szname][dtchar[1]]['dt'].append((match_status, i_dt, dtchar[2]))
+                    m_img['dt'].append((match_status, i_dt, dtchar[2]))
             top_dt = [i for i, ms in enumerate(dt_matched) if ms != 2]
             top_dt = set(top_dt[:sum([taken != 2 for taken, _ in gt_taken])])
             for gtchar, (taken, dt_id) in zip(gt, gt_taken):
                 if taken != 2:
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
+                    m_img['n'] += 1
                     k = 0
                     for attr in gtchar[2]:
                         k += 2 ** attributes.index(attr)
                     thism['attributes'][k]['n'] += 1
                     if taken != 0 and dt_id in top_dt:
                         thism['attributes'][k]['recall'] += 1
+            AP_img, _ = AP_compute(m_img)
+            AP_imgs[szname][gtobj['image_id']] = AP_img
 
     performance = dict()
     for szname, _ in size_ranges:
@@ -258,14 +266,17 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
                 o['recall'] += stat['attributes'][k]['recall']
             texts[text] = {'AP': AP, 'n': stat['n']}
             stat_all['n'] += stat['n']
-            stat_all['detections'] += stat['detections']
+            stat_all['dt'] += stat['dt']
         AP_all, curve = AP_compute(stat_all)
+        a_micro = list(filter(operator.isNumberType, AP_imgs[szname].values()))
+        mAP_micro = None if 0 == len(a_micro) else sum(a_micro) / len(a_micro)
         performance[szname] = {
             'n': n,
             'mAP': AP_all if proposal else mAP / n if n != 0 else None,
             'attributes': szattrs,
             'texts': texts,
             'AP': AP_all,
+            'mAP_micro': mAP_micro,
             'curve': curve,
         }
     return {'error': 0, 'performance': performance}
