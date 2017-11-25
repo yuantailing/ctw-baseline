@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 import json
 import os
 import settings
+import subprocess
 import sys
 
 from pythonapi import eval_tools
@@ -32,10 +33,14 @@ def main():
 
 
 def run_detection(submit_file, output_dir, split, aes_key):
-    with open(settings.TEST_DETECTION_GT) as f:
-        gt = f.read()
     with open(submit_file) as f:
         dt = f.read()
+    p = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    gt, _ = p.communicate()
+    p.wait()
+    assert 0 == p.returncode
+
     report = eval_tools.detection_mAP(
         gt, dt,
         settings.ATTRIBUTES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH,
