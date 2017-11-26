@@ -142,7 +142,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
     gts = ground_truth.splitlines()
     dts = detection.splitlines()
     if len(gts) != len(dts):
-        return error('number of lines not match: %d expected, %d loaded'.format(len(gts), len(dts)))
+        return error('number of lines not match: {} expected, {} loaded'.format(len(gts), len(dts)))
 
     for i, (gt, dt) in enumerate(zip(gts, dts)):
         if echo and 0 == i % 200:
