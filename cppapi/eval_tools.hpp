@@ -27,7 +27,7 @@ struct BBox {
         assert(w >= 0 && h >= 0 && o.w >= 0 && o.h >= 0);
         double A0 = w * h;
         double A1 = o.w * o.h;
-        if (A0 == 0 || A1 == 0)
+        if (0 == A0 || 0 == A1)
             return 0;
         double Nw = std::min<double>(x + w, o.x + o.w) - std::max<double>(x, o.x);
         double Nh = std::min<double>(y + h, o.y + o.h) - std::max<double>(y, o.y);
@@ -37,7 +37,7 @@ struct BBox {
     double a_in_b(BBox const &o) const {
         assert(w >= 0 && h >= 0 && o.w >= 0 && o.h >= 0);
         double A0 = w * h;
-        if (A0 == 0)
+        if (0 == A0)
             return 0;
         double Nw = std::min<double>(x + w, o.x + o.w) - std::max<double>(x, o.x);
         double Nh = std::min<double>(y + h, o.y + o.h) - std::max<double>(y, o.y);
@@ -137,7 +137,7 @@ std::string detection_mAP(
             int match_cnt = 0;
             for (std::size_t i = 0; i < dt.size(); i++) {
                 int matched = dt[i].match_status;
-                assert(matched == 0 || matched == 1);
+                assert(0 == matched || 1 == matched);
                 match_cnt += matched;
                 acc.push_back((double)match_cnt / (i + 1));
                 rc_inc.push_back(matched);
@@ -162,10 +162,10 @@ std::string detection_mAP(
     std::vector<std::vector<double> > AP_imgs(size_ranges.size());
 
     if (ground_truth.size() != detection.size())
-        return error("number of lines not match");
+        return error(format("number of lines not match: %d expected, %d loaded", (int)ground_truth.size(), (int)detection.size()));
 
     for (std::size_t i = 0; i < ground_truth.size(); i++) {
-        if (echo && i % 200 == 0)
+        if (echo && 0 == i % 200)
             std::cerr << i << " / " << ground_truth.size() << std::endl;
         std::string const &gt_s(ground_truth[i]);
         std::string const &dt_s(detection[i]);
@@ -308,7 +308,7 @@ std::string detection_mAP(
             for (std::size_t i_dt = 0; i_dt < dt.size(); i_dt++) {
                 DT const &dtchar(dt[i_dt]);
                 int match_status = dt_matched[i_dt];
-                if (match_status != 2) {
+                if (2 != match_status) {
                     m[i_sz][dtchar.text].dt.push_back({match_status, i_dt, dtchar.score});
                     m_img.dt.push_back({match_status, i_dt, dtchar.score});
                 }
@@ -331,7 +331,7 @@ std::string detection_mAP(
                     if (thism.attributes.empty())
                         thism.attributes.resize(1 << attributes.size(), {0, 0});
                     thism.attributes[gtchar.attribute.k].first += 1;
-                    if (taken != 0 && top_dt.find(dt_id) != top_dt.end())
+                    if (0 != taken && top_dt.find(dt_id) != top_dt.end())
                         thism.attributes[gtchar.attribute.k].second += 1;
                 }
             }
@@ -389,17 +389,24 @@ std::string detection_mAP(
         rapidjson::Value szperf;
         szperf.SetObject();
         szperf.AddMember("n", n, performance.GetAllocator());
-        if (n == 0)
-            szperf.AddMember("mAP", rapidjson::Value(), performance.GetAllocator());
-        else
-            szperf.AddMember("mAP", mAP / n, performance.GetAllocator());
+        if (proposal) {
+            if (AP_all.first < 0)
+                szperf.AddMember("mAP", rapidjson::Value(), performance.GetAllocator());
+            else
+                szperf.AddMember("mAP", AP_all.first, performance.GetAllocator());
+        } else {
+            if (0 == n)
+                szperf.AddMember("mAP", rapidjson::Value(), performance.GetAllocator());
+            else
+                szperf.AddMember("mAP", mAP / n, performance.GetAllocator());
+        }
         szperf.AddMember("attributes", szattrs, performance.GetAllocator());
         szperf.AddMember("texts", texts, performance.GetAllocator());
         if (AP_all.first < 0)
             szperf.AddMember("AP", rapidjson::Value(), performance.GetAllocator());
         else
             szperf.AddMember("AP", AP_all.first, performance.GetAllocator());
-        if (mAP_micro_n == 0)
+        if (0 == mAP_micro_n)
             szperf.AddMember("mAP_micro", rapidjson::Value(), performance.GetAllocator());
         else
             szperf.AddMember("mAP_micro", mAP_micro_sum / mAP_micro_n, performance.GetAllocator());

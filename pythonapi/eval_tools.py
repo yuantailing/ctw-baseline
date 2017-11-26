@@ -75,7 +75,7 @@ def iou(bbox_0, bbox_1):  # bbox is represented as (x, y, w, h)
     assert bbox_0[2] >= 0 and bbox_0[3] >= 0 and bbox_1[2] >= 0 and bbox_1[3] >= 0
     A0 = bbox_0[2] * bbox_0[3]
     A1 = bbox_1[2] * bbox_1[3]
-    if A0 == 0 or A1 == 0:
+    if 0 == A0 or 0 == A1:
         return 0
     Nw = min(bbox_0[0] + bbox_0[2], bbox_1[0] + bbox_1[2]) - max(bbox_0[0], bbox_1[0])
     Nh = min(bbox_0[1] + bbox_0[3], bbox_1[1] + bbox_1[3]) - max(bbox_0[1], bbox_1[1])
@@ -86,7 +86,7 @@ def iou(bbox_0, bbox_1):  # bbox is represented as (x, y, w, h)
 def a_in_b(bbox_0, bbox_1):
     assert bbox_0[2] >= 0 and bbox_0[3] >= 0 and bbox_1[2] >= 0 and bbox_1[3] >= 0
     A0 = bbox_0[2] * bbox_0[3]
-    if A0 == 0:
+    if 0 == A0:
         return 0
     Nw = min(bbox_0[0] + bbox_0[2], bbox_1[0] + bbox_1[2]) - max(bbox_0[0], bbox_1[0])
     Nh = min(bbox_0[1] + bbox_0[3], bbox_1[1] + bbox_1[3]) - max(bbox_0[1], bbox_1[1])
@@ -134,7 +134,6 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
         return AP / m['n'], curve
 
     eval_type = 'proposals' if proposal else 'detections'
-    charset = set()
     m = dict()
     for szname, _ in size_ranges:
         m[szname] = defaultdict(AP_empty)
@@ -143,10 +142,10 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
     gts = ground_truth.splitlines()
     dts = detection.splitlines()
     if len(gts) != len(dts):
-        return error('number of lines not match')
+        return error('number of lines not match: %d expected, %d loaded'.format(len(gts), len(dts)))
 
     for i, (gt, dt) in enumerate(zip(gts, dts)):
-        if echo and i % 200 == 0:
+        if echo and 0 == i % 200:
             print(i, '/', len(gts))
 
         try:
@@ -189,11 +188,10 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
         dt = [(o['bbox'], o.get('text'), o['score']) for o in dt]
 
         gtobj = json.loads(gt)
-        ig = [(o['bbox'], None) for o in gtobj['ignore']]
+        ig = [o['bbox'] for o in gtobj['ignore']]
         gt = []
         for char in anno_tools.each_char(gtobj):
             if char['is_chinese']:
-                charset.add(char['text'])
                 gt.append((char['adjusted_bbox'], char['text'], char['attributes']))
 
         dt_matches = [[] for i in range(len(dt))]
@@ -205,7 +203,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
                     if miou > iou_thresh:
                         dt_matches[i_dt].append((-miou, i_gt))
             for igchar in ig:
-                miou = a_in_b(dtchar[0], igchar[0])
+                miou = a_in_b(dtchar[0], igchar)
                 if miou > iou_thresh:
                     dt_ig[i_dt] = True
         for matches in dt_matches:
@@ -214,7 +212,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
         for szname, size_range in size_ranges:
             def in_size(bbox):
                 longsize = max(bbox[2], bbox[3])
-                return  size_range[0] <= longsize < size_range[1]
+                return size_range[0] <= longsize < size_range[1]
 
             dt_matched = [0 if in_size(o[0]) and False == b else 2 for o, b in zip(dt, dt_ig)]
             gt_taken = [(0, None) if in_size(o[0]) else (2, None) for o in gt]
@@ -228,13 +226,13 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
                             dt_matched[i_dt] = 2
             m_img = {'n': 0, 'dt': []}
             for i_dt, (dtchar, match_status) in enumerate(zip(dt, dt_matched)):
-                if match_status != 2:
+                if 2 != match_status:
                     m[szname][dtchar[1]]['dt'].append((match_status, i_dt, dtchar[2]))
                     m_img['dt'].append((match_status, i_dt, dtchar[2]))
-            top_dt = [i for i, ms in enumerate(dt_matched) if ms != 2]
-            top_dt = set(top_dt[:sum([taken != 2 for taken, _ in gt_taken])])
+            top_dt = [i for i, ms in enumerate(dt_matched) if 2 != ms]
+            top_dt = set(top_dt[:sum([2 != taken for taken, _ in gt_taken])])
             for gtchar, (taken, dt_id) in zip(gt, gt_taken):
-                if taken != 2:
+                if 2 != taken:
                     thism = m[szname][gtchar[1]]
                     thism['n'] += 1
                     m_img['n'] += 1
@@ -242,7 +240,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
                     for attr in gtchar[2]:
                         k += 2 ** attributes.index(attr)
                     thism['attributes'][k]['n'] += 1
-                    if taken != 0 and dt_id in top_dt:
+                    if 0 != taken and dt_id in top_dt:
                         thism['attributes'][k]['recall'] += 1
             AP_img, _ = AP_compute(m_img)
             AP_imgs[szname][gtobj['image_id']] = AP_img
@@ -267,11 +265,11 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
             stat_all['n'] += stat['n']
             stat_all['dt'] += stat['dt']
         AP_all, curve = AP_compute(stat_all)
-        a_micro = list(filter(operator.isNumberType, AP_imgs[szname].values()))
+        a_micro = list(filter(lambda x: x is not None, AP_imgs[szname].values()))
         mAP_micro = None if 0 == len(a_micro) else sum(a_micro) / len(a_micro)
         performance[szname] = {
             'n': n,
-            'mAP': AP_all if proposal else mAP / n if n != 0 else None,
+            'mAP': AP_all if proposal else mAP / n if 0 != n else None,
             'attributes': szattrs,
             'texts': texts,
             'AP': AP_all,
