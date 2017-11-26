@@ -33,19 +33,18 @@ def main():
 
 
 def run_detection(submit_file, output_dir, split, aes_key):
-    with open(submit_file) as f:
-        dt = f.read()
-    p = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    gt = p.communicate()[0].decode()
+    exe = '/tmp/evalwrap.bin'
+    p = subprocess.Popen(['g++', 'evalwrap.cpp', '-std=c++11', '-O2', '-Wno-all', '-o', exe])
     assert 0 == p.wait()
+    p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
+        stdout=subprocess.PIPE) #, stderr=subprocess.PIPE)
+    p2 = subprocess.Popen([exe, submit_file], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    report_str = p2.communicate()[0].decode('utf-8')
+    assert 0 == p1.wait()
+    assert 0 == p2.wait()
 
-    report = eval_tools.detection_mAP(
-        gt, dt,
-        settings.ATTRIBUTES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH,
-        proposal=False,
-        echo=False
-    )
+    report = json.loads(report_str)
     assert 0 == report['error'], report['msg']
 
     performance = report['performance']
