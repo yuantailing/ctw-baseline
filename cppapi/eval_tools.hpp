@@ -2,7 +2,9 @@
 #define EVAL_TOOLS_HPP
 
 #include <algorithm>
+#include <cstdarg>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
@@ -72,6 +74,24 @@ std::string detection_mAP(
         double iou_thresh,
         bool proposal=false,
         bool echo=false) {
+    auto format = [](std::string const &fmt_str, ...)->std::string {
+        int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
+        std::unique_ptr<char[]> formatted;
+        std::va_list ap;
+        while(1) {
+            formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+            strcpy(&formatted[0], fmt_str.c_str());
+            va_start(ap, fmt_str);
+            final_n = std::vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
+            va_end(ap);
+            if (final_n < 0 || final_n >= n)
+                n += std::abs(final_n - n + 1);
+            else
+                break;
+        }
+        return formatted.get();
+    };
+
     auto error = [](std::string const &msg)->std::string {
         rapidjson::Document d;
         d.SetObject();
@@ -151,13 +171,42 @@ std::string detection_mAP(
         std::string const &dt_s(detection[i]);
 
         rapidjson::Document dt_j;
-        dt_j.Parse(dt_s.c_str(), dt_s.size());
+        if (dt_j.Parse(dt_s.c_str(), dt_s.size()).HasParseError())
+            return error(format("line %d is not legal json", i + 1));
         if (!dt_j.IsObject())
-            return error("is not json object");
+            return error(format("line %d is not json object", i + 1));
         if (!dt_j.HasMember(eval_type))
-            return error("does not contain key");
+            return error(format("line %d does not contain key `%s`", i + 1, eval_type));
         if (!dt_j[eval_type].IsArray())
-            return error("is not an array");
+            return error(format("line %d %s is not an array", i + 1, eval_type));
+        if (dt_j[eval_type].Size() > (rapidjson::SizeType)max_det)
+            return error(format("line %d number of %s exceeds limit (%d)", i + 1, eval_type, max_det));
+        int j = 0;
+        for (rapidjson::Value const &chr: dt_j[eval_type].GetArray()) {
+            if (!chr.IsObject())
+                return error(format("line %d %s candidate %d is not an object", i + 1, eval_type, j + 1));
+            if (!proposal && !chr.HasMember("text"))
+                return error(format("line %d %s candidate %d does not contain key `text`", i + 1, eval_type, j + 1));
+            if (!chr.HasMember("score"))
+                return error(format("line %d %s candidate %d does not contain key `score`", i + 1, eval_type, j + 1));
+            if (!chr.HasMember("bbox"))
+                return error(format("line %d %s candidate %d does not contain key `bbox`", i + 1, eval_type, j + 1));
+            if (!chr["text"].IsString())
+                return error(format("line %d %s candidate %d text is not text-typet", i + 1, eval_type, j + 1));
+            if (!chr["score"].IsNumber())
+                return error(format("line %d %s candidate %d score is neither int nor float", i + 1, eval_type, j + 1));
+            rapidjson::Value const &bbox(chr["bbox"]);
+            if (!bbox.IsArray())
+                return error(format("line %d %s candidate %d bbox is not an array", i + 1, eval_type, j + 1));
+            if (4 != bbox.Size())
+                return error(format("line %d %s candidate %d bbox is illegal", i + 1, eval_type, j + 1));
+            for (rapidjson::Value const &t: bbox.GetArray())
+                if (!t.IsNumber())
+                    return error(format("line %d %s candidate %d bbox is illegalt", i + 1, eval_type, j + 1));
+            if (bbox[2].GetDouble() <= 0 || bbox[3].GetDouble() <= 0)
+                return error(format("line %d %s candidate %d bbox w or h <= 0", i + 1, eval_type, j + 1));
+            j += 1;
+        }
 
         struct DT {
             BBox bbox;

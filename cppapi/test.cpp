@@ -1,11 +1,10 @@
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
-#include <iostream>
+#include <ctime>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <ctime>
 #include "eval_tools.hpp"
 #include "../codalab/settings.hpp"
 
