@@ -37,9 +37,8 @@ def run_detection(submit_file, output_dir, split, aes_key):
         dt = f.read()
     p = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    gt, _ = p.communicate()
-    p.wait()
-    assert 0 == p.returncode
+    gt = p.communicate()[0].decode()
+    assert 0 == p.wait()
 
     report = eval_tools.detection_mAP(
         gt, dt,
