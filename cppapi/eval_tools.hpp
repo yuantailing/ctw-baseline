@@ -171,7 +171,7 @@ std::string detection_mAP(
         std::string const &dt_s(detection[i]);
 
         rapidjson::Document dt_j;
-        if (dt_j.Parse(dt_s.c_str(), dt_s.size()).HasParseError())
+        if (dt_j.Parse<rapidjson::kParseIterativeFlag|rapidjson::kParseFullPrecisionFlag>(dt_s.c_str(), dt_s.size()).HasParseError())
             return error(format("line %d is not legal json", i + 1));
         if (!dt_j.IsObject())
             return error(format("line %d is not json object", i + 1));
@@ -231,7 +231,7 @@ std::string detection_mAP(
         });
 
         rapidjson::Document gtobj;
-        gtobj.Parse(gt_s.c_str(), gt_s.size());
+        gtobj.Parse<rapidjson::kParseFullPrecisionFlag>(gt_s.c_str(), gt_s.size());
         std::vector<BBox> ig;
         for (rapidjson::Value const &o: gtobj["ignore"].GetArray())
             ig.push_back(o["bbox"]);
