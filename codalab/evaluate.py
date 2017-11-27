@@ -37,7 +37,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
     p = subprocess.Popen(['g++', 'evalwrap.cpp', '-std=c++11', '-O2', '-Wno-all', '-o', exe])
     assert 0 == p.wait()
     p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
-        stdout=subprocess.PIPE) #, stderr=subprocess.PIPE)
+        stdout=subprocess.PIPE)
     p2 = subprocess.Popen([exe, submit_file], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     report_str = p2.communicate()[0].decode('utf-8')
@@ -48,7 +48,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
     assert 0 == report['error'], report['msg']
 
     performance = report['performance']
-    print(json.dumps(performance, sort_keys=True, indent=2))
+    print(json.dumps(performance, sort_keys=True, indent=None))
 
     scores = list()
     for szname, _ in settings.SIZE_RANGES:
@@ -86,12 +86,20 @@ def run_detection(submit_file, output_dir, split, aes_key):
         for k, v in scores:
             f.write('{:s}: {:f}\n'.format(k, v * 100))
 
+    with open('scores.template.html') as f:
+        template = f.read()
+    with open('jschannel/src/jschannel.js') as f:
+        template = template.replace('REPLACE_WITH_JSCHANNEL', f.read())
+    template = template.replace('REPLACE_WITH_DATA', json.dumps({
+        'performance': performance,
+        'size_ranges': settings.SIZE_RANGES,
+        'attributes': settings.ATTRIBUTES,
+        'max_det': settings.MAX_DET_PER_IMAGE,
+        'iou_thresh': settings.IOU_THRESH,
+    }, sort_keys=True, indent=None))
     output_html = os.path.join(output_dir, 'scores.html')
     with open(output_html, 'w') as f:
-        f.write('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"></head>'
-            '<body><h2>Detailed results</h2>'
-            '<iframe style="height: 80%; width: 100%; border: 0;" src="https://ctwdataset.github.io/resource/codalab/templates/detection_detailed_results_iframe.html"></iframe>'
-            '</body></html>')
+        f.write(template)
 
 
 if __name__ == '__main__':
