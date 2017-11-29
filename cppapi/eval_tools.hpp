@@ -368,50 +368,54 @@ std::string detection_mAP(
         }
         std::vector<std::pair<double, double> > mAP_curve;
         std::vector<std::size_t> heads(mAP_curves.size(), 0);
-        while (1) {
-            bool all_reach_end = true;
-            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
-                if (heads[i] != mAP_curves[i].second.size()) {
-                    all_reach_end = false;
-                    break;
-                }
-            }
-            if (all_reach_end)
-                break;
-            auto rc_lt = [](std::pair<int, int> const &a, std::pair<int, int> const &b)->bool {
-                return (long long)a.first * (long long)b.second < (long long)b.first * (long long)a.second;
-            };
-            std::pair<int, int> rcmin(1, 1);
-            double accsum = 0.;
-            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
-                std::pair<int, int> thisrc(1 + (int)heads[i], mAP_curves[i].first);
-                if (heads[i] < mAP_curves[i].second.size() && rc_lt(thisrc, rcmin))
-                    rcmin = thisrc;
-                double accthis = heads[i] == mAP_curves[i].second.size() ? 0 : mAP_curves[i].second[heads[i]];
-                accsum += accthis * mAP_curves[i].first;
-            }
-            mAP_curve.push_back(std::make_pair((double)rcmin.first / (double)rcmin.second, accsum / n));
-            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
-                std::pair<int, int> thisrc(1 + (int)heads[i], mAP_curves[i].first);
-                if (!rc_lt(rcmin, thisrc) && heads[i] < mAP_curves[i].second.size()) {
-                    heads[i] += 1;
-                }
+        std::pair<int, int> const rc_inf(1, 0);
+        auto rc_lt = [](std::pair<int, int> const &a, std::pair<int, int> const &b)->bool {
+            return (long long)a.first * (long long)b.second < (long long)b.first * (long long)a.second;
+        };
+        auto rc_get = [&](std::size_t i)->std::pair<int, int> {
+            return heads[i] == mAP_curves[i].second.size() ? rc_inf : std::make_pair(1 + (int)heads[i], mAP_curves[i].first);
+        };
+        auto cmp_heap = [&](std::size_t a, std::size_t b)->bool {
+            return rc_lt(rc_get(b), rc_get(a));
+        };
+        std::vector<std::size_t> rcheap;
+        for (std::size_t i = 0; i < mAP_curves.size(); i++)
+            rcheap.push_back(i);
+        std::make_heap(rcheap.begin(), rcheap.end(), cmp_heap);
+        long double accsum = 0;
+        std::for_each(mAP_curves.begin(), mAP_curves.end(), [&](std::pair<int, std::vector<double> > const &p) {
+            if (!p.second.empty())
+                accsum += p.first * p.second[0];
+        });
+        while (0 < rcheap.size() && rc_get(rcheap[0]) != rc_inf) {
+            std::pair<int, int> rcmin = rc_get(rcheap[0]);
+            mAP_curve.push_back(std::make_pair((double)rcmin.first / (double)rcmin.second, (double)(accsum / n)));
+            while (!rc_lt(rcmin, rc_get(rcheap[0]))) {
+                std::size_t i = rcheap[0];
+                std::pop_heap(rcheap.begin(), rcheap.end(), cmp_heap);
+                assert(heads[i] < mAP_curves[i].second.size());
+                heads[i] += 1;
+                long double rc_delta = (long double)mAP_curves[i].second[heads[i] - 1]
+                        - (heads[i] < mAP_curves[i].second.size() ? (long double)mAP_curves[i].second[heads[i]] : 0.);
+                accsum -= mAP_curves[i].first * rc_delta;
+                std::push_heap(rcheap.begin(), rcheap.end(), cmp_heap);
             }
         }
-        double mAP = 0.;
+        long double lmAP = 0.;
         rapidjson::Value mAP_jcurve;
         mAP_jcurve.SetArray();
         for (std::size_t i = 0; i < mAP_curve.size(); i++) {
             double lastrc = i == 0 ? 0 : mAP_curve[i - 1].first;
             double rc = mAP_curve[i].first;
             double acc = mAP_curve[i].second;
-            mAP += (rc - lastrc) * acc;
+            lmAP += ((long double)rc - (long double)lastrc) * (long double)acc;
             rapidjson::Value point;
             point.SetArray();
             point.PushBack(rc, performance.GetAllocator());
             point.PushBack(acc, performance.GetAllocator());
             mAP_jcurve.PushBack(point, performance.GetAllocator());
         }
+        double mAP = (double)lmAP;
 
         rapidjson::Value szattrs;
         szattrs.SetArray();
