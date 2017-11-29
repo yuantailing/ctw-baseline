@@ -345,19 +345,20 @@ std::string detection_mAP(
     for (std::size_t i_sz = 0; i_sz < size_ranges.size(); i_sz++) {
         std::string const &szname = size_ranges[i_sz].first;
         int n = 0;
-        double mAP = 0.;
         APData apd;
         apd.attributes.resize(1 << attributes.size(), {0, 0});
         rapidjson::Value texts;
         texts.SetObject();
+        std::vector<std::pair<int, std::vector<double> > > mAP_curves;
         for (auto it = m[i_sz].begin(); it != m[i_sz].end(); ++it) {
             std::string const &text(it->first);
             APData &stat(it->second);
             if (0 == stat.n)
                 continue;
             n += stat.n;
-            double AP = stat.AP_compute().first;
-            mAP += AP * stat.n;
+            std::pair<double, std::vector<double> > p = stat.AP_compute();
+            double AP = p.first;
+            mAP_curves.push_back(std::make_pair(stat.n, p.second));
             apd += stat;
             rapidjson::Value thistext;
             thistext.SetObject();
@@ -365,6 +366,53 @@ std::string detection_mAP(
             thistext.AddMember("AP", AP, performance.GetAllocator());
             texts.AddMember({text.c_str(), (rapidjson::SizeType)text.size(), performance.GetAllocator()}, thistext, performance.GetAllocator());
         }
+        std::vector<std::pair<double, double> > mAP_curve;
+        std::vector<std::size_t> heads(mAP_curves.size(), 0);
+        while (1) {
+            bool all_reach_end = true;
+            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
+                if (heads[i] != mAP_curves[i].second.size()) {
+                    all_reach_end = false;
+                    break;
+                }
+            }
+            if (all_reach_end)
+                break;
+            auto rc_lt = [](std::pair<int, int> const &a, std::pair<int, int> const &b)->bool {
+                return (long long)a.first * (long long)b.second < (long long)b.first * (long long)a.second;
+            };
+            std::pair<int, int> rcmin(1, 1);
+            double accsum = 0.;
+            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
+                std::pair<int, int> thisrc(1 + (int)heads[i], mAP_curves[i].first);
+                if (heads[i] < mAP_curves[i].second.size() && rc_lt(thisrc, rcmin))
+                    rcmin = thisrc;
+                double accthis = heads[i] == mAP_curves[i].second.size() ? 0 : mAP_curves[i].second[heads[i]];
+                accsum += accthis * mAP_curves[i].first;
+            }
+            mAP_curve.push_back(std::make_pair((double)rcmin.first / (double)rcmin.second, accsum / n));
+            for (std::size_t i = 0; i < mAP_curves.size(); i++) {
+                std::pair<int, int> thisrc(1 + (int)heads[i], mAP_curves[i].first);
+                if (!rc_lt(rcmin, thisrc) && heads[i] < mAP_curves[i].second.size()) {
+                    heads[i] += 1;
+                }
+            }
+        }
+        double mAP = 0.;
+        rapidjson::Value mAP_jcurve;
+        mAP_jcurve.SetArray();
+        for (std::size_t i = 0; i < mAP_curve.size(); i++) {
+            double lastrc = i == 0 ? 0 : mAP_curve[i - 1].first;
+            double rc = mAP_curve[i].first;
+            double acc = mAP_curve[i].second;
+            mAP += (rc - lastrc) * acc;
+            rapidjson::Value point;
+            point.SetArray();
+            point.PushBack(rc, performance.GetAllocator());
+            point.PushBack(acc, performance.GetAllocator());
+            mAP_jcurve.PushBack(point, performance.GetAllocator());
+        }
+
         rapidjson::Value szattrs;
         szattrs.SetArray();
         for (std::pair<int, int> const &p: apd.attributes) {
@@ -398,7 +446,8 @@ std::string detection_mAP(
             if (0 == n)
                 szperf.AddMember("mAP", rapidjson::Value(), performance.GetAllocator());
             else
-                szperf.AddMember("mAP", mAP / n, performance.GetAllocator());
+                szperf.AddMember("mAP", mAP, performance.GetAllocator());
+            szperf.AddMember("mAP_curve", mAP_jcurve, performance.GetAllocator());
         }
         szperf.AddMember("attributes", szattrs, performance.GetAllocator());
         szperf.AddMember("texts", texts, performance.GetAllocator());
