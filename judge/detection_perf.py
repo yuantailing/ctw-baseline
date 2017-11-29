@@ -12,24 +12,29 @@ import numpy as np
 import os
 import plot_tools
 import settings
+import subprocess
 import sys
 
 from classification_perf import get_chartjs
 from jinja2 import Template
-from pythonapi import eval_tools
 
 
 def main(dt_file_path):
+    if not os.path.isfile(settings.DETECTION_EXE):
+        args = ['g++', '../codalab/evalwrap.cpp', '-std=c++11', '-O2', '-Wall', '-o', settings.DETECTION_EXE]
+        print(*args)
+        p = subprocess.Popen(args)
+        assert 0 == p.wait()
     with open(settings.TEST_DETECTION_GT) as f:
         gt = f.read()
     with open(dt_file_path) as f:
         dt = f.read()
-    report = eval_tools.detection_mAP(
-        gt, dt,
-        settings.ATTRIBUTES, settings.SIZE_RANGES, settings.MAX_DET_PER_IMAGE, settings.IOU_THRESH,
-        proposal=proposal,
-        echo=True
-    )
+    args = [settings.DETECTION_EXE, dt_file_path]
+    print(*args)
+    p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    report_str = p.communicate(gt)[0].decode('utf-8')
+    assert 0 == p.wait()
+    report = json.loads(report_str)
     assert 0 == report['error'], report['msg']
     with codecs.open(settings.PROPOSAL_REPORT if proposal else settings.DETECTION_REPORT, 'w', 'utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=2, sort_keys=True)

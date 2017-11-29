@@ -75,11 +75,11 @@ std::string detection_mAP(
         bool proposal=false,
         bool echo=false) {
     auto format = [](std::string const &fmt_str, ...)->std::string {
-        int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
+        int final_n, n = ((int)fmt_str.size()) * 2;
         std::unique_ptr<char[]> formatted;
         std::va_list ap;
         while(1) {
-            formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+            formatted.reset(new char[n]);
             strcpy(&formatted[0], fmt_str.c_str());
             va_start(ap, fmt_str);
             final_n = std::vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);

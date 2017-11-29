@@ -9,6 +9,7 @@ TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 
 PRODUCTS_ROOT          = 'products'
+DETECTION_EXE          = 'products/detection.bin'
 STAT_FREQUENCY         = 'products/stat_frequency.json'
 DATASET_CROPPED        = 'products/dataset_cropped.pkl'
 TEST_CLS_CROPPED       = 'products/test_cls_cropped.pkl'
