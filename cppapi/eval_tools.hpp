@@ -463,7 +463,7 @@ std::string detection_mAP(
             szperf.AddMember("mAP_micro", rapidjson::Value(), performance.GetAllocator());
         else
             szperf.AddMember("mAP_micro", mAP_micro_sum / mAP_micro_n, performance.GetAllocator());
-        szperf.AddMember("curve", curve, performance.GetAllocator());
+        szperf.AddMember("AP_curve", curve, performance.GetAllocator());
         performance.AddMember({szname.c_str(), (rapidjson::SizeType)szname.size(), performance.GetAllocator()}, szperf, performance.GetAllocator());
     }
     rapidjson::Document report;

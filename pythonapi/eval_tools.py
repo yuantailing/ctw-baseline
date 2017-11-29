@@ -264,7 +264,7 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
             texts[text] = {'AP': AP, 'n': stat['n']}
             stat_all['n'] += stat['n']
             stat_all['dt'] += stat['dt']
-        AP_all, curve = AP_compute(stat_all)
+        AP_all, AP_curve = AP_compute(stat_all)
         a_micro = list(filter(lambda x: x is not None, AP_imgs[szname].values()))
         mAP_micro = None if 0 == len(a_micro) else sum(a_micro) / len(a_micro)
         performance[szname] = {
@@ -274,6 +274,6 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
             'texts': texts,
             'AP': AP_all,
             'mAP_micro': mAP_micro,
-            'curve': curve,
+            'AP_curve': AP_curve,
         }
     return {'error': 0, 'performance': performance}
