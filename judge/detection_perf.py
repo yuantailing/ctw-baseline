@@ -20,7 +20,7 @@ from jinja2 import Template
 
 
 def main(dt_file_path):
-    makefile = 'products/makefile'
+    makefile = os.path.join(settings.PRODUCTS_ROOT, 'makefile')
     with open(makefile, 'w') as f:
         f.write('all: {}\n'.format(settings.DETECTION_EXE))
         f.write('{}: ../codalab/evalwrap.cpp ../cppapi/eval_tools.hpp\n'.format(settings.DETECTION_EXE))
