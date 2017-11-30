@@ -36,12 +36,12 @@ def main(dt_file_path):
     args = [settings.DETECTION_EXE, dt_file_path]
     print(*args)
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    report_str = p.communicate(gt)[0].decode('utf-8')
+    report_str = p.communicate(gt.encode('utf-8'))[0].decode('utf-8')
     assert 0 == p.wait()
     report = json.loads(report_str)
     assert 0 == report['error'], report['msg']
     with codecs.open(settings.PROPOSAL_REPORT if proposal else settings.DETECTION_REPORT, 'w', 'utf-8') as f:
-        json.dump(report, f, ensure_ascii=False, indent=None, sort_keys=True)
+        json.dump(report, f, ensure_ascii=False, indent=2, sort_keys=True)
     html_explore(report)
     show(report)
     draw(report)

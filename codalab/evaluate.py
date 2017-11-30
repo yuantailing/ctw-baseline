@@ -21,13 +21,16 @@ def main():
         meta_info = json.load(f)
     if meta_info['task'] == 'detection':
         submit_file = None
-        for file_name in sorted(os.listdir(submit_dir)):
-            file_path = os.path.join(submit_dir, file_name)
-            if file_name.endswith('.jsonl') and os.path.isfile(file_path):
-                submit_file = file_path
-                break
+        if os.path.isfile(submit_dir):
+            submit_file = submit_dir
+        else:
+            for file_name in sorted(os.listdir(submit_dir)):
+                file_path = os.path.join(submit_dir, file_name)
+                if file_name.endswith('.jsonl') and os.path.isfile(file_path):
+                    submit_file = file_path
+                    break
         assert submit_file is not None, '*.jsonl not found'
-        run_detection(submit_file, output_dir, meta_info['split'], meta_info['aes_key'])
+        run_detection(submit_file, output_dir, meta_info['split'], meta_info.get('aes_key'))
     else:
         raise NotImplementedError('task='.format(meta_info['task']))
 
@@ -36,8 +39,12 @@ def run_detection(submit_file, output_dir, split, aes_key):
     exe = '/tmp/evalwrap.bin'
     p = subprocess.Popen(['g++', 'evalwrap.cpp', '-std=c++11', '-O2', '-Wno-all', '-o', exe])
     assert 0 == p.wait()
-    p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
-        stdout=subprocess.PIPE)
+    if aes_key is None:
+        p1 = subprocess.Popen(['cat', settings.TEST_DETECTION_GT],
+                stdout=subprocess.PIPE)
+    else:
+        p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
+                stdout=subprocess.PIPE)
     p2 = subprocess.Popen([exe, submit_file], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     report_str = p2.communicate()[0].decode('utf-8')
@@ -84,7 +91,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
     output_path = os.path.join(output_dir, 'scores.txt')
     with open(output_path, 'w') as f:
         for k, v in scores:
-            f.write('{:s}: {:f}\n'.format(k, v * 100))
+            f.write('{:s}: {:.8f}\n'.format(k, v * 100))
 
     with open('scores.template.html') as f:
         template = f.read()
