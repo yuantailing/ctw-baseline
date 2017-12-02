@@ -3,7 +3,29 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-		<script id="ctwjs" src="https://ctwdataset.github.io/resource/codalab/tools/draw_detection.js" async="async"></script>
+		<script>
+			;(function() {
+				'use strict';
+				function documentOnLoad(func) {
+					if (document.readyState != 'loading' || document.addEventListener === undefined)
+						func();
+					else
+						document.addEventListener('DOMContentLoaded', func);
+				}
+				var tag = document.createElement('script');
+				tag.setAttribute('id', 'ctwjs');
+				tag.setAttribute('src', 'https://ctwdataset.github.io/resource/codalab/tools/draw_detection.js');
+				tag.setAttribute('async', 'async');
+				tag.addEventListener('error', function() {
+					var p = document.createElement('p');
+					p.textContent = 'Failed to load script.';
+					documentOnLoad(function() {
+						document.getElementsByTagName('body')[0].appendChild(p);
+					});
+				});
+				document.getElementsByTagName('head')[0].appendChild(tag);
+			})();
+		</script>
 	</head>
 	<body>
 		<h2>Detailed results</h2>
