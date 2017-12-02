@@ -5,6 +5,3 @@
 [submodule "cppapi/rapidjson"]
 	path = cppapi/rapidjson
 	url = git@github.com:Tencent/rapidjson.git
-[submodule "codalab/jschannel"]
-	path = codalab/jschannel
-	url = git@github.com:mozilla/jschannel.git

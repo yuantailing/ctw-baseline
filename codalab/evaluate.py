@@ -37,7 +37,8 @@ def main():
 
 def run_detection(submit_file, output_dir, split, aes_key):
     exe = '/tmp/evalwrap.bin'
-    p = subprocess.Popen(['g++', 'evalwrap.cpp', '-std=c++11', '-O2', '-Wno-all', '-o', exe])
+    p = subprocess.Popen(['g++', 'evalwrap.cpp', '-std=c++11', '-O2', '-Wno-all', '-o', exe], stdout=subprocess.PIPE)
+    _ = p.communicate()
     assert 0 == p.wait()
     if aes_key is None:
         p1 = subprocess.Popen(['cat', settings.TEST_DETECTION_GT],
@@ -55,7 +56,34 @@ def run_detection(submit_file, output_dir, split, aes_key):
     assert 0 == report['error'], report['msg']
 
     performance = report['performance']
-    print(json.dumps(performance, sort_keys=True, indent=None))
+    for _, szperf in performance.items():
+        for key in set(szperf['texts'].keys()) - set(u'中国大电路车店家公行'):
+            szperf['texts'].pop(key)
+        mAP_curve = []
+        rc_step = 1
+        for i, (rc, acc) in enumerate(szperf['mAP_curve']):
+            while rc * settings.AP_CURVE_MAX_STEP >= rc_step:
+                mAP_curve.append([rc_step / settings.AP_CURVE_MAX_STEP, round(acc, settings.AP_CURVE_MAX_NDIGITS)])
+                rc_step += 1
+        szperf.pop('mAP_curve')
+        szperf['mAP_curve_discrete'] = mAP_curve
+        AP_curve = []
+        rc_step = 1
+        n = szperf['n']
+        for i, acc in enumerate(szperf['AP_curve']):
+            while (i + 1) * settings.AP_CURVE_MAX_STEP >= rc_step * n:
+                AP_curve.append([rc_step / settings.AP_CURVE_MAX_STEP, round(acc, settings.AP_CURVE_MAX_NDIGITS)])
+                rc_step += 1
+        szperf.pop('AP_curve')
+        szperf['AP_curve_discrete'] = AP_curve
+    data = {
+        'performance': performance,
+        'size_ranges': settings.SIZE_RANGES,
+        'attributes': settings.ATTRIBUTES,
+        'max_det': settings.MAX_DET_PER_IMAGE,
+        'iou_thresh': settings.IOU_THRESH,
+    }
+    print(json.dumps(data, sort_keys=True, indent=None))
 
     scores = list()
     for szname, _ in settings.SIZE_RANGES:
@@ -95,15 +123,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
 
     with open('scores.template.html') as f:
         template = f.read()
-    with open('jschannel/src/jschannel.js') as f:
-        template = template.replace('REPLACE_WITH_JSCHANNEL', f.read())
-    template = template.replace('REPLACE_WITH_DATA', json.dumps({
-        'performance': performance,
-        'size_ranges': settings.SIZE_RANGES,
-        'attributes': settings.ATTRIBUTES,
-        'max_det': settings.MAX_DET_PER_IMAGE,
-        'iou_thresh': settings.IOU_THRESH,
-    }, sort_keys=True, indent=None))
+    template = template.replace('REPLACE_WITH_DATA', json.dumps(data, sort_keys=True, indent=None))
     output_html = os.path.join(output_dir, 'scores.html')
     with open(output_html, 'w') as f:
         f.write(template)

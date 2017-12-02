@@ -3,33 +3,13 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
-		<script>REPLACE_WITH_JSCHANNEL</script>
+		<script id="ctwjs" src="https://ctwdataset.github.io/resource/codalab/templates/draw_detection.js" async="async"></script>
 	</head>
 	<body>
 		<h2>Detailed results</h2>
-		<h2>Loading ...</h2>
-		<iframe id="childId" style="height: 640px; width: 100%; border: 0;" src="https://ctwdataset.github.io/resource/codalab/templates/detailed-child-detection.html"></iframe>
-		<script>
-var data = REPLACE_WITH_DATA;
-
-var chan = Channel.build({
-	window: document.getElementById("childId").contentWindow,
-	origin: "*",
-	scope: "CTWScope",
-});
-
-chan.call({
-    method: "detail",
-    params: {
-		data: data,
-		iframeId: 'childId',
-		parentEval: function(foo) { eval(foo); },
-	},
-    success: function(v) {
-        if (v !== undefined)
-			console.log(v);
-    },
-});
+		<p>Loading ...</p>
+		<script id="data-wrap">
+			var data = REPLACE_WITH_DATA;
 		</script>
 	</body>
 </html>

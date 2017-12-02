@@ -27,3 +27,6 @@ ATTRIBUTES             = [
 ]
 MAX_DET_PER_IMAGE      = 1000
 IOU_THRESH             = .5
+
+AP_CURVE_MAX_STEP      = 1000
+AP_CURVE_MAX_NDIGITS   = 6
