@@ -24,14 +24,19 @@ def main():
 
     def cp(desc):
         file_name = desc['file_name']
-        assert file_name in m
-        os.symlink(os.path.abspath(m[file_name]), os.path.join(copy_dest, file_name))
+        src = m[file_name]
+        dst = os.path.join(copy_dest, file_name)
+        os.symlink(os.path.relpath(src, os.path.dirname(dst)), dst)
 
     copy_dest = settings.TRAINVAL_IMAGE_DIR
+    if os.path.isdir(copy_dest):
+        shutil.rmtree(copy_dest)
     os.makedirs(copy_dest)
     common_tools.multithreaded(cp, data_list['train'] + data_list['val'], num_thread=8)
 
     copy_dest = settings.TEST_IMAGE_DIR
+    if os.path.isdir(copy_dest):
+        shutil.rmtree(copy_dest)
     os.makedirs(copy_dest)
     common_tools.multithreaded(cp, data_list['test_cls'] + data_list['test_det'], num_thread=8)
 
