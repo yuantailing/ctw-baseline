@@ -22,8 +22,7 @@ def main():
         for p, r, fn in common_tools.each_file_tuple(root):
             m[fn] = p
 
-    def cp(desc):
-        file_name = desc['file_name']
+    def cp(file_name):
         src = m[file_name]
         dst = os.path.join(copy_dest, file_name)
         os.symlink(os.path.relpath(src, os.path.dirname(dst)), dst)
@@ -32,13 +31,15 @@ def main():
     if os.path.isdir(copy_dest):
         shutil.rmtree(copy_dest)
     os.makedirs(copy_dest)
-    common_tools.multithreaded(cp, data_list['train'] + data_list['val'], num_thread=8)
+    file_names = list({meta['file_name'] for meta in data_list['train'] + data_list['val']})
+    common_tools.multithreaded(cp, file_names, num_thread=8)
 
     copy_dest = settings.TEST_IMAGE_DIR
     if os.path.isdir(copy_dest):
         shutil.rmtree(copy_dest)
     os.makedirs(copy_dest)
-    common_tools.multithreaded(cp, data_list['test_cls'] + data_list['test_det'], num_thread=8)
+    file_names = list({meta['file_name'] for meta in data_list['test_cls'] + data_list['test_det']})
+    common_tools.multithreaded(cp, file_names, num_thread=8)
 
 if __name__ == '__main__':
     main()

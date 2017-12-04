@@ -70,7 +70,7 @@ def main():
     train = common_tools.reduce_sum(train)
     with open(settings.TRAINVAL_PICKLE, 'wb') as f:
         cPickle.dump(train, f)
-    del train  # release memory
+    train = None  # release memory
 
     with open(settings.TEST_CLASSIFICATION) as f:
         lines = f.read().splitlines()
@@ -89,7 +89,7 @@ def main():
     test = common_tools.reduce_sum(test)
     with open(settings.TEST_PICKLE, 'wb') as f:
         cPickle.dump(test, f)
-    del test
+    test = None
 
 
 if __name__ == '__main__':

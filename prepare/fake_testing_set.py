@@ -24,8 +24,8 @@ def main():
     data_list = {
         'train': full_data_list['train'],
         'val': [],
-        'test_cls': full_data_list['test_cls'],
-        'test_det': full_data_list['test_det'],
+        'test_cls': full_data_list['val'],
+        'test_det': full_data_list['val'],
     }
     with open(settings.DATA_LIST, 'w') as f:
         json.dump(data_list, f, indent=2)

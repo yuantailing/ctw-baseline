@@ -25,7 +25,11 @@ def get_chinese_ttf():
     if not os.path.isdir(settings.PLOTS_DIR):
         os.makedirs(settings.PLOTS_DIR)
     chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')
-    if not os.path.isfile(chinese_ttf):
+    if not os.path.isfile(chinese_ttf) or 9751960 != os.path.getsize(chinese_ttf):
+        url = 'http://fonts.cooltext.com/Downloader.aspx?ID=11120'
+        print('you should download {} to {}'.format(url, chinese_ttf))
+        if os.path.isfile(chinese_ttf):
+            os.unlink(chinese_ttf)
         urllib.request.urlretrieve('http://fonts.cooltext.com/Downloader.aspx?ID=11120',
                                    chinese_ttf)
     return chinese_ttf
@@ -117,15 +121,9 @@ def main():
         'test': v['test'],
     } for k, v in most_freq.items()]
     most_freq.sort(key=lambda o: (-o['trainval'] - o['test'], o['text']))
-    print('50_most_frequent_characters')
-    for i, o in enumerate(most_freq[:50]):
+    print('10_most_frequent_characters')
+    for i, o in enumerate(most_freq[:10]):
         print(i + 1, o['text'], o['trainval'], o['test'])
-    print('total_number_of_characters_in_each_image')
-    for i in range(1, 61):
-        print(i, num_char[i]['trainval'], num_char[i]['test'])
-    print('number_of_different_characters_per_image')
-    for i in range(1, 61):
-        print(i, num_uniq_char[i]['trainval'], num_uniq_char[i]['test'])
     print('over_all')
     print('uniq_chinese', len(most_freq))
     print('num_image', num_image['trainval'], num_image['test'])

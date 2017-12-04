@@ -13,6 +13,7 @@ import operator
 import os
 import settings
 import six
+import sys
 
 from jinja2 import Template
 from pythonapi import common_tools
@@ -45,6 +46,9 @@ cfgs = [
 
 for cfg in cfgs:
     cfg['predictions_file_path'] = os.path.join('..', 'classification', 'products', 'predictions_{}.jsonl'.format(cfg['model_name']))
+
+if 1 < len(sys.argv):
+    cfgs = list(filter(lambda o: o['model_name'] in sys.argv[1:], cfgs))
 
 
 def crop(image, bbox, maxlong):
