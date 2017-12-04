@@ -147,7 +147,8 @@ def main():
     write_darknet_data()
     write_darknet_cfg()
     write_darknet_names()
-    assert os.path.isfile(settings.DARKNET_PRETRAIN), 'please download {} to {}'.format('https://pjreddie.com/media/files/darknet19_448.conv.23', settings.DARKNET_PRETRAIN)
+    assert os.path.isfile(settings.DARKNET_PRETRAIN) and 79327120 == os.path.getsize(settings.DARKNET_PRETRAIN), \
+            'please download {} to {}'.format('https://pjreddie.com/media/files/darknet19_448.conv.23', settings.DARKNET_PRETRAIN)
     if not common_tools.exists_and_newer(settings.DARKNET_TRAIN_LIST, settings.CATES):
         crop_train_images()
 

@@ -27,7 +27,7 @@ def get_chinese_ttf():
     chinese_ttf = os.path.join(settings.PRODUCTS_ROOT, 'SimHei.ttf')
     if not os.path.isfile(chinese_ttf) or 9751960 != os.path.getsize(chinese_ttf):
         url = 'http://fonts.cooltext.com/Downloader.aspx?ID=11120'
-        print('you should download {} to {}'.format(url, chinese_ttf))
+        print('please download {} to {}'.format(url, chinese_ttf))
         if os.path.isfile(chinese_ttf):
             os.unlink(chinese_ttf)
         urllib.request.urlretrieve('http://fonts.cooltext.com/Downloader.aspx?ID=11120',
