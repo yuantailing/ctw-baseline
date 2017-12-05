@@ -157,6 +157,8 @@ def work(selected, ext):
                         a.append({'bbox': bbox, 'text': '', 'color': '#00f'})
         return list(reversed(a))
 
+    if selected is None:
+        selected = [(o['image_id'], 0, 0, 2048, 2048) for i, o in enumerate(data_list['test_det']) if i % 200 == 0]
     draw_gt = False
 
     if not os.path.isdir(settings.PRINTTEXT_DRAWING_DIR):
@@ -227,7 +229,10 @@ def supplementary():
 
 
 if __name__ == '__main__':
-    if 1 < len(sys.argv) and sys.argv[1].startswith('sup'):
+    if 1 < len(sys.argv) and sys.argv[1].startswith('main'):
+        main()
+    elif 1 < len(sys.argv) and sys.argv[1].startswith('sup'):
         supplementary()
     else:
-        main()
+        assert 1 == len(sys.argv)
+        work(None, 'pdf')
