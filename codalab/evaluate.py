@@ -41,8 +41,13 @@ def run_detection(submit_file, output_dir, split, aes_key):
     _ = p.communicate()
     assert 0 == p.wait()
     if aes_key is None:
-        p1 = subprocess.Popen(['cat', settings.TEST_DETECTION_GT],
-                stdout=subprocess.PIPE)
+        if 'test_det' == split:
+            p1 = subprocess.Popen(['cat', settings.TEST_DETECTION_GT],
+                    stdout=subprocess.PIPE)
+        else:
+            assert 'val' == split
+            p1 = subprocess.Popen(['cat', settings.VAL],
+                    stdout=subprocess.PIPE)
     else:
         p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
                 stdout=subprocess.PIPE)
