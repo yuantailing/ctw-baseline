@@ -17,14 +17,14 @@ def main():
     meta_path = os.path.join(settings.CODALAB_TEST_REF, 'meta.json')
     with open(meta_path, 'w') as f:
         json.dump({
-            'task': 'detection',
-            'split': 'test_det',
+            'task': 'classification',
+            'split': 'test_cls',
             'aes_key': None,
         }, f)
 
     if not os.path.isdir(settings.CODALAB_TEST_OUTPUT):
         os.makedirs(settings.CODALAB_TEST_OUTPUT)
-    args = ['python2', 'evaluate.py', '../detection/products/detections.jsonl', settings.CODALAB_TEST_REF, settings.CODALAB_TEST_OUTPUT]
+    args = ['python2', 'evaluate.py', '../classification/products/predictions_inception_v4.jsonl', settings.CODALAB_TEST_REF, settings.CODALAB_TEST_OUTPUT]
     print(*args)
     p = subprocess.Popen(args)
     return p.wait()

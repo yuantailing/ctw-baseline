@@ -19,7 +19,19 @@ def main():
 
     with open(os.path.join(truth_dir, 'meta.json')) as f:
         meta_info = json.load(f)
-    if meta_info['task'] == 'detection':
+    if meta_info['task'] == 'classification':
+        submit_file = None
+        if os.path.isfile(submit_dir):
+            submit_file = submit_dir
+        else:
+            for file_name in sorted(os.listdir(submit_dir)):
+                file_path = os.path.join(submit_dir, file_name)
+                if file_name.endswith('.jsonl') and os.path.isfile(file_path):
+                    submit_file = file_path
+                    break
+        assert submit_file is not None, '*.jsonl not found'
+        run_classification(submit_file, output_dir, meta_info['split'], meta_info.get('aes_key'))
+    elif meta_info['task'] == 'detection':
         submit_file = None
         if os.path.isfile(submit_dir):
             submit_file = submit_dir
@@ -32,7 +44,82 @@ def main():
         assert submit_file is not None, '*.jsonl not found'
         run_detection(submit_file, output_dir, meta_info['split'], meta_info.get('aes_key'))
     else:
-        raise NotImplementedError('task='.format(meta_info['task']))
+        raise NotImplementedError('task={}'.format(meta_info['task']))
+
+
+def run_classification(submit_file, output_dir, split, aes_key):
+    with open(submit_file) as f:
+        pr = f.read()
+    if aes_key is None:
+        if 'test_cls' == split:
+            p1 = subprocess.Popen(['cat', settings.TEST_CLASSIFICATION_GT],
+                    stdout=subprocess.PIPE)
+        elif 'val' == split:
+            p1 = subprocess.Popen(['cat', settings.VAL_CLASSIFICATION_GT],
+                    stdout=subprocess.PIPE)
+        else:
+            raise NotImplementedError('split={}'.format(split))
+    else:
+        if 'test_cls' == split:
+            p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_CLASSIFICATION_GT_AES, '-k', aes_key, '-d'],
+                    stdout=subprocess.PIPE)
+        else:
+            raise NotImplementedError('split={}'.format(split))
+    gt = p1.communicate()[0].decode('utf-8')
+    report = eval_tools.classification_recall(gt, pr, settings.RECALL_N, settings.ATTRIBUTES, settings.SIZE_RANGES)
+    assert 0 == report['error'], report['msg']
+    performance = report['performance']
+    for _, szperf in performance.items():
+        for key in set(szperf['texts'].keys()) - settings.TOP_CATEGORIES:
+            szperf['texts'].pop(key)
+    data = {
+        'performance': performance,
+        'recall_n': settings.RECALL_N,
+        'attributes': settings.ATTRIBUTES,
+        'size_ranges': settings.SIZE_RANGES,
+    }
+    print(json.dumps(data, sort_keys=True, indent=None))
+
+    scores = list()
+    for szname, _ in settings.SIZE_RANGES:
+        for rc_n in settings.RECALL_N:
+            n = rc = 0
+            for recalls in performance[szname]['attributes']:
+                n += recalls['n']
+                rc += recalls['recalls'][rc_n]
+            rc = 0. if 0 == n else rc / n
+            scores.append(('{}_top_{}'.format(szname, rc_n), rc))
+
+    def check(k, attr_id):
+        if attr_id < len(settings.ATTRIBUTES):
+            return int(k) & 2 ** attr_id
+        else:
+            return 0 == int(k) & 2 ** (attr_id - len(settings.ATTRIBUTES))
+    def trans(attr_id):
+        if attr_id < len(settings.ATTRIBUTES):
+            return settings.ATTRIBUTES[attr_id]
+        else:
+            return 'not_{}'.format(settings.ATTRIBUTES[attr_id - len(settings.ATTRIBUTES)])
+    for i in range(2 * len(settings.ATTRIBUTES)):
+        n = rc = 0
+        for k, o in enumerate(performance['all']['attributes']):
+            if check(k, i):
+                n += o['n']
+                rc += o['recalls'][1]
+        rc = 0. if 0 == n else rc / n
+        scores.append(('all_{}_top_1'.format(trans(i)), rc))
+
+    output_path = os.path.join(output_dir, 'scores.txt')
+    with open(output_path, 'w') as f:
+        for k, v in scores:
+            f.write('{:s}: {:.8f}\n'.format(k, v * 100))
+
+    with open('scores_cls.template.html') as f:
+        template = f.read()
+    template = template.replace('REPLACE_WITH_DATA', json.dumps(data, sort_keys=True, indent=None))
+    output_html = os.path.join(output_dir, 'scores.html')
+    with open(output_html, 'w') as f:
+        f.write(template)
 
 
 def run_detection(submit_file, output_dir, split, aes_key):
@@ -44,13 +131,17 @@ def run_detection(submit_file, output_dir, split, aes_key):
         if 'test_det' == split:
             p1 = subprocess.Popen(['cat', settings.TEST_DETECTION_GT],
                     stdout=subprocess.PIPE)
-        else:
-            assert 'val' == split
+        elif 'val' == split:
             p1 = subprocess.Popen(['cat', settings.VAL],
                     stdout=subprocess.PIPE)
+        else:
+            raise NotImplementedError('split={}'.format(split))
     else:
-        p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
-                stdout=subprocess.PIPE)
+        if 'test_det' == split:
+            p1 = subprocess.Popen(['openssl', 'aes-256-cbc', '-in', settings.TEST_DETECTION_GT_AES, '-k', aes_key, '-d'],
+                    stdout=subprocess.PIPE)
+        else:
+            raise NotImplementedError('split={}'.format(split))
     p2 = subprocess.Popen([exe, submit_file], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     report_str = p2.communicate()[0].decode('utf-8')
@@ -62,7 +153,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
 
     performance = report['performance']
     for _, szperf in performance.items():
-        for key in set(szperf['texts'].keys()) - set(u'中国大电路车店家公行'):
+        for key in set(szperf['texts'].keys()) - settings.TOP_CATEGORIES:
             szperf['texts'].pop(key)
         mAP_curve = []
         rc_step = 1
@@ -99,7 +190,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
         for o in performance[szname]['attributes']:
             n += o['n']
             rc += o['recall']
-        rc = 0. if n == 0 else rc / n
+        rc = 0. if 0 == n else rc / n
         scores.append(('{}_Recall'.format(szname), rc))
 
     def check(k, attr_id):
@@ -118,7 +209,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
             if check(k, i):
                 n += o['n']
                 rc += o['recall']
-        rc = 0. if n == 0 else rc / n
+        rc = 0. if 0 == n else rc / n
         scores.append(('all_Recall_{}'.format(trans(i)), rc))
 
     output_path = os.path.join(output_dir, 'scores.txt')
@@ -126,7 +217,7 @@ def run_detection(submit_file, output_dir, split, aes_key):
         for k, v in scores:
             f.write('{:s}: {:.8f}\n'.format(k, v * 100))
 
-    with open('scores.template.html') as f:
+    with open('scores_det.template.html') as f:
         template = f.read()
     template = template.replace('REPLACE_WITH_DATA', json.dumps(data, sort_keys=True, indent=None))
     output_html = os.path.join(output_dir, 'scores.html')

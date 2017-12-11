@@ -32,7 +32,7 @@ def classification_recall(ground_truth, prediction, recall_n, attributes, size_r
     gts = ground_truth.splitlines()
     prs = prediction.splitlines()
     if len(gts) != len(prs):
-        return error('number of lines not match')
+        return error('number of lines not match, gt={} vs. pr={}'.format(len(gts), len(prs)))
     for i, (gt, pr) in enumerate(zip(gts, prs)):
         gt = json.loads(gt)
         try:
@@ -48,7 +48,7 @@ def classification_recall(ground_truth, prediction, recall_n, attributes, size_r
         if not isinstance(pr, list):
             return error('line {} predictions is not an array'.format(i + 1))
         if len(pr) != len(gt):
-            return error('line {} wrong predictions length'.format(i + 1))
+            return error('line {} number of predictions not match, gt={} vs. dt={}'.format(i + 1, len(gt), len(pr)))
         for j, (cgt, cpr) in enumerate(zip(gt, pr)):
             if not isinstance(cpr, list):
                 return error('line {} prediction {} is not an array'.format(i + 1, j + 1))

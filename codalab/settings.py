@@ -1,5 +1,11 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import unicode_literals
+
+
 DATA_LIST              = '../data/annotations/info.json'
 VAL                    = '../data/annotations/val.jsonl'
+VAL_CLASSIFICATION_GT  = '../data/annotations/val_cls.gt.jsonl'
 TEST_CLASSIFICATION_GT = '../data/annotations/test_cls.gt.jsonl'
 TEST_CLASSIFICATION_GT_AES = '../data/annotations/test_cls.gt.jsonl.aes'
 TEST_DETECTION_GT      = '../data/annotations/test_det.gt.jsonl'
@@ -27,6 +33,7 @@ ATTRIBUTES             = [
 ]
 MAX_DET_PER_IMAGE      = 1000
 IOU_THRESH             = .5
+TOP_CATEGORIES       = set(u'中国大电路车店家公行')
 
 AP_CURVE_MAX_STEP      = 1000
 AP_CURVE_MAX_NDIGITS   = 6
