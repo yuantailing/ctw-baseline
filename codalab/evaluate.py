@@ -73,10 +73,10 @@ def run_classification(submit_file, output_dir, split, aes_key):
         for key in set(szperf['texts'].keys()) - settings.TOP_CATEGORIES:
             szperf['texts'].pop(key)
     data = {
-        'performance': performance,
-        'recall_n': settings.RECALL_N,
-        'attributes': settings.ATTRIBUTES,
         'size_ranges': settings.SIZE_RANGES,
+        'attributes': settings.ATTRIBUTES,
+        'recall_n': settings.RECALL_N,
+        'performance': performance,
     }
     print(json.dumps(data, sort_keys=True, indent=None))
 
@@ -173,11 +173,11 @@ def run_detection(submit_file, output_dir, split, aes_key):
         szperf.pop('AP_curve')
         szperf['AP_curve_discrete'] = AP_curve
     data = {
-        'performance': performance,
         'size_ranges': settings.SIZE_RANGES,
         'attributes': settings.ATTRIBUTES,
         'max_det': settings.MAX_DET_PER_IMAGE,
         'iou_thresh': settings.IOU_THRESH,
+        'performance': performance,
     }
     print(json.dumps(data, sort_keys=True, indent=None))
 
