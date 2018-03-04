@@ -21,10 +21,10 @@
 					var p = document.createElement('p');
 					p.textContent = 'Failed to load script.';
 					documentOnLoad(function() {
-						document.getElementsByTagName('body')[0].appendChild(p);
+						document.body.appendChild(p);
 					});
 				});
-				document.getElementsByTagName('head')[0].appendChild(tag);
+				document.head.appendChild(tag);
 			})();
 		</script>
 	</head>
