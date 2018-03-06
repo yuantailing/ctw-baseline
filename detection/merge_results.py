@@ -21,8 +21,8 @@ from six.moves import cPickle
 def read(file_paths):
     all = defaultdict(list)
     imshape = (2048, 2048, 3)
-    removal = (0., 0.)
-    size_ranges = ((float('-inf'), float('inf')), (32., float('inf')))
+    removal = (0., 0., 0.)
+    size_ranges = ((float('-inf'), float('inf')), (32., float('inf')), (64., float('inf')))
     levelmap = dict()
     for level_id, (cropratio, cropoverlap) in enumerate(settings.TEST_CROP_LEVELS):
         cropshape = (settings.TEST_IMAGE_SIZE // cropratio, settings.TEST_IMAGE_SIZE // cropratio)

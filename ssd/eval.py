@@ -34,20 +34,10 @@ def last_caffemodel(backup_root):
     return max(all, key=lambda t: t[1])[0]
 
 
-def write_ssd_test_data(split_id):
-    test_list = darknet_tools.append_before_ext(settings.TEST_LIST, '.{}'.format(split_id))
-    with open(settings.TEST_LIST) as f:
-        ls = f.read().splitlines()
-    with open(test_list, 'w') as f:
-        for line in ls[split_id * len(ls) // settings.TEST_SPLIT_NUM:(1 + split_id) * len(ls) // settings.TEST_SPLIT_NUM]:
-            f.write(line)
-            f.write('\n')
-
-
-def eval_yolo(split_id, tid):
-    exe = os.path.join(settings.CAFFE_ROOT, '.build_release/examples/ssd/ssd_detect.bin')
-    deploy = os.path.join(settings.PRODUCTS_ROOT, 'models', 'SSD_300x300', 'deploy.prototxt')
-    model = last_caffemodel(os.path.join(settings.PRODUCTS_ROOT, 'models', 'SSD_300x300'))
+def eval_ssd(split_id, tid):
+    exe = os.path.join(settings.CAFFE_ROOT, '.build_release', 'examples', 'ssd', 'ssd_detect.bin')
+    deploy = os.path.join(settings.PRODUCTS_ROOT, 'models', 'SSD_512x512', 'deploy.prototxt')
+    model = last_caffemodel(os.path.join(settings.PRODUCTS_ROOT, 'models', 'SSD_512x512'))
     test_list = darknet_tools.append_before_ext(settings.TEST_LIST, '.{}'.format(split_id))
     args = [exe, deploy, model, test_list]
 
@@ -69,9 +59,17 @@ def eval_yolo(split_id, tid):
 
 
 def main():
+    with open(settings.TEST_LIST) as f:
+        ls = f.read().splitlines()
+    def write_ssd_test_data(split_id):
+        test_list = darknet_tools.append_before_ext(settings.TEST_LIST, '.{}'.format(split_id))
+        with open(test_list, 'w') as f:
+            for line in ls[split_id * len(ls) // settings.TEST_SPLIT_NUM:(1 + split_id) * len(ls) // settings.TEST_SPLIT_NUM]:
+                f.write(line)
+                f.write('\n')
     for i in range(settings.TEST_SPLIT_NUM):
         write_ssd_test_data(i)
-    common_tools.multithreaded_tid(eval_yolo, range(settings.TEST_SPLIT_NUM), num_thread=12)
+    common_tools.multithreaded_tid(eval_ssd, range(settings.TEST_SPLIT_NUM), num_thread=12)
 
 
 if __name__ == '__main__':

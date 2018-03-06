@@ -15,7 +15,7 @@ def main():
     assert os.path.isfile(os.path.join(settings.CAFFE_ROOT, 'build/tools/caffe')), 'please build caffe'
 
     exe = 'python2'
-    script = os.path.join('ssd_hardcode', 'ssd_pascal.py')
+    script = os.path.join('ssd_hardcode', 'ssd_pascal_512.py')
     args = [exe, script]
 
     env = os.environ.copy()
@@ -29,7 +29,6 @@ def main():
     p = subprocess.Popen(args, env=env)
     p.wait()
     assert 0 == p.returncode
-
 
 
 if __name__ == '__main__':
