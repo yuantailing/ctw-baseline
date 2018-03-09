@@ -1,7 +1,7 @@
 [submodule "detection/darknet"]
 	path = detection/darknet
 	url = git@github.com:yuantailing/darknet.git
-	branch = chinese
+	branch = ctw
 [submodule "cppapi/rapidjson"]
 	path = cppapi/rapidjson
 	url = git@github.com:Tencent/rapidjson.git
