@@ -125,7 +125,7 @@ def main(models, n):
     np.random.seed(0)
     sampled = np.array(range(len(gts)))
     np.random.shuffle(sampled)
-    sampled = sampled[:n]
+    sampled = sampled[105:105 + n]
 
     with open('predictions_compare.template.html') as f:
         template = Template(f.read())
@@ -156,6 +156,40 @@ def main(models, n):
             'models': list(map(operator.itemgetter('display_name'), models)),
             'rows': rows,
         }))
+
+    with open(settings.STAT_FREQUENCY) as f:
+        freq = json.load(f)
+    text2idx = {o['text']: i for i, o in enumerate(freq)}
+
+    dir_name = 'cls_examples'
+    root = os.path.join(settings.PRODUCTS_ROOT, dir_name)
+    if not os.path.isdir(root):
+        os.makedirs(root)
+    def text2minipage(text):
+        return r'\begin{minipage}{3mm} \includegraphics[width=\linewidth]{figure/texts/' \
+            + '0_{}.png'.format(text2idx[text]) + r'} \end{minipage}'
+
+    for no, i in enumerate(sampled):
+        file_name = '{}.png'.format(i)
+        image, gt = gts[i]
+        image = misc.toimage(image)
+        image.save(os.path.join(root, file_name), format='png')
+
+        s = r'\begin{minipage}{6.0mm} \includegraphics[width=\linewidth]{figure/cls_examples/' + '{}.png'.format(i) + r'} \end{minipage} &' + '\n'
+        s += '{} &\n'.format(text2minipage(gt['text']))
+
+        for j, preds_model in enumerate(preds):
+            texts, probs = preds_model[i]
+            prob_text = '{:5.1f}'.format(round(probs[0] * 1000) / 10.)
+            prob_text = prob_text.replace(' ', r'\,\,\,')
+            col = '{} {}'.format(text2minipage(texts[0]), prob_text)
+            if texts[0] == gt['text']:
+                col = r'\multicolumn{1}{>{\columncolor{cls_correct}}r}{' + col + '}'
+            if j == len(preds) - 1:
+                col += r' \\'
+            else:
+                col += ' &'
+            s += col + '\n'
 
 
 if __name__ == '__main__':

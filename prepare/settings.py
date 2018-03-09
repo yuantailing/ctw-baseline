@@ -10,3 +10,5 @@ TEST_CLASSIFICATION    = '../data/annotations/test_cls.jsonl'
 TRAINVAL_IMAGE_DIR     = '../data/images/trainval'
 TEST_IMAGE_DIR         = '../data/images/test'
 IMAGE_SOURCES_ROOTS    = ['../data/all_images', ]
+
+PRODUCTS_ROOT          = 'products'

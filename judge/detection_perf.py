@@ -31,8 +31,6 @@ def main(dt_file_path):
     assert 0 == p.wait()
     with open(settings.TEST_DETECTION_GT) as f:
         gt = f.read()
-    with open(dt_file_path) as f:
-        dt = f.read()
     args = [settings.DETECTION_EXE, dt_file_path]
     print(*args)
     p = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -137,10 +135,10 @@ def draw(report):
         plt.close()
 
     with plt.style.context({
-        'figure.subplot.left': .14,
-        'figure.subplot.right': .96,
-        'figure.subplot.bottom': .12,
-        'figure.subplot.top': .94,
+        'figure.subplot.left': .10,
+        'figure.subplot.right': .97,
+        'figure.subplot.bottom': .10,
+        'figure.subplot.top': .97,
         'pdf.fonttype': 42,
         'legend.loc': 'upper right',
     }):
@@ -159,10 +157,10 @@ def draw(report):
         plt.close()
 
     with plt.style.context({
-        'figure.subplot.left': .14,
-        'figure.subplot.right': .96,
-        'figure.subplot.bottom': .12,
-        'figure.subplot.top': .94,
+        'figure.subplot.left': .10,
+        'figure.subplot.right': .97,
+        'figure.subplot.bottom': .10,
+        'figure.subplot.top': .97,
         'pdf.fonttype': 42,
         'legend.loc': 'upper right',
     }):
