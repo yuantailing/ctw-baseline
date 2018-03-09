@@ -5,3 +5,7 @@
 [submodule "cppapi/rapidjson"]
 	path = cppapi/rapidjson
 	url = git@github.com:Tencent/rapidjson.git
+[submodule "ssd/caffe"]
+	path = ssd/caffe
+	url = git@github.com:weiliu89/caffe.git
+	branch = ssd
