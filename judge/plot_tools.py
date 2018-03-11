@@ -77,8 +77,9 @@ def print_text(in_file_name, out_file_name, obj):
                 ax.add_patch(patches.Rectangle(bbox[:2], *bbox[2:], fill=False, color=color))
                 text_base = (bbox[0], bbox[1])
             if polygon is not None:
+                polygon = [(xy[0] - crop[0], xy[1] - crop[1]) for xy in polygon]
                 xy = list(zip(*polygon))
-                if max(xy[0]) < 0 or min(xy[0]) >= crop[2] or min(xy[1]) < 0 or max(xy[1]) >= crop[3]:
+                if max(xy[0]) < 0 or min(xy[0]) >= crop[2] or max(xy[1]) < 0 or min(xy[1]) >= crop[3]:
                     continue
                 def f(x, y):
                     return x + y
