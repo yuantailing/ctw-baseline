@@ -50,7 +50,7 @@ def main(models, n):
 
     def text2minipage(text):
         i = [o['text'] for o in stat_freq].index(text)
-        return r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts_dataset/' + '0_{}.png'.format(i) + r'} \end{minipage}'
+        return r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/' + '0_{}.png'.format(i) + r'} \end{minipage}'
 
     for no, i in enumerate(sampled):
         file_name = '{}.png'.format(i)

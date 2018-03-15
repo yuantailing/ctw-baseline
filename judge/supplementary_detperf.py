@@ -27,7 +27,7 @@ def main():
     cates = [(c['text'], [], c['cate_id']) for c in sorted(random.sample(cates[10:1000], 50), key=lambda o: -o['trainval'])]
     cates.sort(key=lambda t: freq_order.index(t[0]))
     for no, (text, a, cate_id) in enumerate(cates):
-        s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/' + '1_{}.png'.format(cate_id) + r'} \end{minipage}'
+        s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/' + '0_{}.png'.format(freq_order.index(text)) + r'} \end{minipage}'
         for szname, _ in settings.SIZE_RANGES:
             APn = performance[szname]['texts'].get(text)
             if APn is None:

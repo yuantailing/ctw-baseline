@@ -71,7 +71,7 @@ def main():
         gt = json.loads(lines[i])
         crop = (x, y, w, h)
         file_name = os.path.join(settings.TRAINVAL_IMAGE_DIR if i < len(data_list['train'] + data_list['val']) else settings.TEST_IMAGE_DIR, gt['file_name'])
-        output = os.path.join(settings.PRINTTEXT_DRAWING_DIR, 'gt_{}_{}_{}_{}_{}.eps'.format(image_id, x, y, w, h))
+        output = os.path.join(settings.PRINTTEXT_DRAWING_DIR, 'gt_{}_{}_{}_{}_{}.pdf'.format(image_id, x, y, w, h))
         print_text(file_name, output, {
             'boxes': gt2array(gt),
             'crop': crop,

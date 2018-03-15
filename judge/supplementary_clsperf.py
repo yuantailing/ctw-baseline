@@ -50,7 +50,7 @@ def main():
         for char, a, _ in cates:
             a.append(performance['all']['texts'][char])
     for no, (text, a, cate_id) in enumerate(cates):
-        s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/1_' + '{}'.format(cate_id) + '.png} \end{minipage}'
+        s = '{} & '.format(no + 1) + r'\begin{minipage}{3.5mm} \includegraphics[width=\linewidth]{figure/texts/0_' + '{}'.format(freq_order.index(text)) + '.png} \end{minipage}'
         max_acc = 0.
         for b in a:
             acc = round(b['recalls'][1] / b['n'] * 100, 1)
