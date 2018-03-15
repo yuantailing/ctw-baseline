@@ -4,7 +4,7 @@ Baseline methods for [CTW dataset](https://ctwdataset.github.io/).
 
 ## Tutorial
 
- 1. `cd examples/`
+ 1. `cd tutorial/`
  2. `jupyter notebook`
 
 ## License
