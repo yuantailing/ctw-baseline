@@ -1,11 +1,11 @@
 [submodule "detection/darknet"]
 	path = detection/darknet
-	url = git@github.com:yuantailing/darknet.git
+	url = https://github.com/yuantailing/darknet.git
 	branch = ctw
 [submodule "cppapi/rapidjson"]
 	path = cppapi/rapidjson
-	url = git@github.com:Tencent/rapidjson.git
+	url = https://github.com/Tencent/rapidjson.git
 [submodule "ssd/caffe"]
 	path = ssd/caffe
-	url = git@github.com:weiliu89/caffe.git
+	url = https://github.com/weiliu89/caffe.git
 	branch = ssd
