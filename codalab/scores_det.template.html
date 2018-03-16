@@ -1,38 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-us">
 	<head>
 		<meta charset="UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge">
 		<title>Detection - detailed results</title>
-		<script>
-			;(function() {
-				'use strict';
-				function documentOnLoad(func) {
-					if (document.readyState != 'loading' || document.addEventListener === undefined)
-						func();
-					else
-						document.addEventListener('DOMContentLoaded', func);
-				}
-				var tag = document.createElement('script');
-				tag.setAttribute('id', 'ctwjs');
-				tag.setAttribute('src', 'https://ctwdataset.github.io/resource/codalab/tools/draw_detection.js');
-				tag.setAttribute('async', 'async');
-				tag.addEventListener('error', function() {
-					var p = document.createElement('p');
-					p.textContent = 'Failed to load script.';
-					documentOnLoad(function() {
-						document.body.appendChild(p);
-					});
-				});
-				document.head.appendChild(tag);
-			})();
-		</script>
+		<script id="ctwjs" src="https://ctwdataset.github.io/resource/codalab/tools/draw_detection.js"></script>
 	</head>
 	<body>
 		<h2>Detailed results</h2>
-		<p>Loading ...</p>
-		<script id="data-wrap">
-			var data = REPLACE_WITH_DATA;
-		</script>
+		<p>Loading scripts ...</p>
+		<script id="data-wrap" type="text/x-ctw-evaluation-results">REPLACE_WITH_DATA</script>
 	</body>
 </html>

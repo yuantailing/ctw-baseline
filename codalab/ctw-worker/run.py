@@ -28,13 +28,13 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('broker_url', type=six.text_type)
-    parser.add_argument('--ctw_root', type=six.text_type, default='/docker-transfer/ctw')
+    parser.add_argument('--ctw_root', type=six.text_type, default=os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
     args = parser.parse_args()
 
     # kill running containers
     running = call(['docker', 'ps', '--filter', 'ancestor={}'.format(image), '--format', '{{.ID}}'])
     for container_id in running.strip().splitlines():
-        call(['docker', 'kill', container_id])
+        call(['docker', 'stop', container_id])
 
     # build image
     stdout = call(['docker', 'build', '-t', image, '.'])
