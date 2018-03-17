@@ -7,7 +7,7 @@ Baseline methods for [CTW dataset](https://ctwdataset.github.io/).
  1. `cd tutorial/`
  2. `jupyter notebook`
 
-Or you can preview the tutorial from GitHub: [preview](https://github.com/yuantailing/ctw-baseline/blob/master/tutorial/1-basics.ipynb)
+You can also preview the tutorial on GitHub: [preview](https://github.com/yuantailing/ctw-baseline/blob/master/tutorial/1-basics.ipynb)
 
 ## License
 
