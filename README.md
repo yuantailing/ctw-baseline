@@ -11,7 +11,7 @@ You can also preview the tutorial on GitHub: [preview](https://github.com/yuanta
 
 ## License
 
-Most of the baseline code belongs to Tai-Ling Yuan and is licensed under an MIT License, except for some code which is modified from other open source projects.
+Most of the baseline code belongs to Tai-Ling Yuan and is licensed under the MIT License, except for some code which is modified from other open source projects.
 
  - classification/tf_hardcode: Apache License (TensorFlow)
  - classification/slim: Apache License (TensorFlow)
