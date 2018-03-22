@@ -15,7 +15,7 @@ Most of the baseline code belongs to Tai-Ling Yuan and is licensed under the MIT
 
  - classification/tf_hardcode: Apache License (TensorFlow)
  - classification/slim: Apache License (TensorFlow)
- - codalab/ctw-worker/worker.py: MIT License (Codalab)
- - detection/ssd_hardcode: caffe license (caffe)
+ - codalab/ctw-worker/worker.py: MIT License (CodaLab)
+ - ssd/ssd_hardcode: caffe license
 
 Please visit [https://ctwdataset.github.io/](https://ctwdataset.github.io/) to get the license for images and annotations.
