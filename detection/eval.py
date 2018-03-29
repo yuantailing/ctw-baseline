@@ -45,6 +45,8 @@ def eval_yolo(split_id, tid):
     last_backup = darknet_tools.last_backup(settings.DARKNET_BACKUP_DIR)
     assert last_backup is not None
     darknet_data = darknet_tools.append_before_ext(settings.DARKNET_DATA, '.{}'.format(split_id))
+    if not os.path.isdir(os.path.dirname(settings.DARKNET_RESULTS_OUT)):
+        os.makedirs(os.path.dirname(settings.DARKNET_RESULTS_OUT))
     darknet_results_out = darknet_tools.append_before_ext(settings.DARKNET_RESULTS_OUT, '.{}'.format(split_id))
 
     args = [exefile, 'detector', 'valid', darknet_data, settings.DARKNET_TEST_CFG,

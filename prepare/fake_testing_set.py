@@ -33,7 +33,7 @@ def main():
     # copy training set
     shutil.copy('../data/annotations/downloads/train.jsonl', settings.TRAIN)
 
-    # create empty validating set
+    # create empty validation set
     with open(settings.VAL, 'w') as f:
         pass
 

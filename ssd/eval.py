@@ -41,6 +41,8 @@ def eval_ssd(split_id, tid):
     test_list = darknet_tools.append_before_ext(settings.TEST_LIST, '.{}'.format(split_id))
     args = [exe, deploy, model, test_list]
 
+    if not os.path.isdir(os.path.dirname(settings.TEST_RESULTS_OUT)):
+        os.makedirs(os.path.dirname(settings.TEST_RESULTS_OUT))
     stdout_reopen = darknet_tools.append_before_ext(settings.TEST_RESULTS_OUT, '.{}'.format(split_id))
 
     new_env = os.environ.copy()
