@@ -66,7 +66,7 @@ def read(file_paths):
 
 
 def main():
-    dn_merge = imp.load_source('dn_prepare', '../detection/merge_results.py')
+    dn_merge = imp.load_source('dn_merge', '../detection/merge_results.py')
 
     file_paths = []
     for split_id in range(settings.TEST_SPLIT_NUM):
