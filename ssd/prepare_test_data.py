@@ -12,9 +12,8 @@ from pythonapi import common_tools
 
 
 def main():
-    if not common_tools.exists_and_newer(settings.TEST_LIST, settings.CATES):
-        dn_prepare = imp.load_source('dn_prepare', '../detection/prepare_test_data.py')
-        dn_prepare.crop_test_images(settings.TEST_LIST)
+    dn_prepare = imp.load_source('dn_prepare', '../detection/prepare_test_data.py')
+    dn_prepare.crop_test_images(settings.TEST_LIST)
 
 
 if __name__ == '__main__':
