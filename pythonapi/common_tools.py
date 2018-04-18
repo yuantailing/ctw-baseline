@@ -81,8 +81,11 @@ def multithreaded_tid(func, args_list, num_thread, logfunc=None):
         t.start()
     if logfunc is not None:
         while 0 < n:
-            logfunc(*args_list[p.get(block=True)])
-            n -= 1
+            try:
+                logfunc(*args_list[p.get(block=True, timeout=1)])
+                n -= 1
+            except queue.Empty as e:
+                pass
     for t in threads:
         t.join()
 
