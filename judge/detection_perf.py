@@ -169,10 +169,12 @@ def draw(report):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='both', linestyle='dotted')
         for szname, stat in sorted(report['performance'].items()):
-            x, y = zip(*stat['mAP_curve'])
-            assert 0 < len(x)
-            x = [0.] + list(x) + [x[-1]]
-            y = [y[0]] + list(y) + [0.]
+            if stat['mAP_curve']:
+                x, y = zip(*stat['mAP_curve'])
+                x = [0.] + list(x) + [x[-1]]
+                y = [y[0]] + list(y) + [0.]
+            else:
+                x, y = [0., 1.], [0., 0.]
             plt.plot(x, y, label=szname)
         plt.legend()
         plt.xlabel('recall')
