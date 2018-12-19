@@ -3,5 +3,6 @@ matplotlib
 opencv-python
 scikit-image
 scipy
+shapely
 six
 tensorflow-gpu>=1.4.0rc0

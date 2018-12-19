@@ -6,11 +6,14 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
+import numpy as np
 import operator
 import six
 
-from . import anno_tools
+from . import anno_tools, common_tools
 from collections import defaultdict
+from scipy.spatial import ConvexHull
+from shapely.geometry import Polygon
 
 
 def classification_recall(ground_truth, prediction, recall_n, attributes, size_ranges):
@@ -97,16 +100,6 @@ def a_in_b(bbox_0, bbox_1):
 def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou_thresh, proposal=False, echo=False):
     def error(s):
         return {'error': 1, 'msg': s}
-
-    def poly2bbox(poly):
-        if 0 == len(poly):
-            return [0, 0, 0, 0]
-        xmin, ymin = poly[0][0], poly[0][1]
-        xmax, ymax = xmin, ymin
-        for p in poly:
-            xmin, xmax = min(xmin, p[0]), max(xmax, p[0])
-            ymin, ymax = min(ymin, p[1]), max(ymax, p[1])
-        return [xmin, ymin, xmax - xmin, ymax - ymin]
 
     def AP_empty():
         return {'n': 0, 'dt': [], 'attributes': [{'n': 0, 'recall': 0} for _ in range(2 ** len(attributes))]}
@@ -277,3 +270,159 @@ def detection_mAP(ground_truth, detection, attributes, size_ranges, max_det, iou
             'AP_curve': AP_curve,
         }
     return {'error': 0, 'performance': performance}
+
+
+def iou_polygon(poly_a, poly_b):
+    AN = (poly_a & poly_b).area
+    if AN == 0:
+        return 0
+    A0 = poly_a.area
+    A1 = poly_b.area
+    return max(0., min(1., AN / (A0 + A1 - AN)))
+
+
+def a_in_b_polygon(poly_a, poly_b):
+    AN = (poly_a & poly_b).area
+    if AN == 0:
+        return 0
+    A0 = poly_a.area
+    if A0 <= 0:
+        return 0
+    return max(0., min(1., AN / A0))
+
+
+def textline_AED(ground_truth, detection, max_det, max_vertices, iou_thresh, echo=False):
+    def error(s):
+        return {'error': 1, 'msg': s}
+
+    def edit_distance(s1, s2):
+        m, n = len(s1) + 1, len(s2) + 1
+        dp = [[0 for _ in range(n)] for _ in range(m)]
+        for i in range(n):
+            dp[0][i] = i
+        for i in range(m):
+            dp[i][0] = i
+        for i in range(1, m):
+            for j in range(1, n):
+                dp[i][j] = min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (0 if s1[i - 1] == s2[j - 1] else 1))
+        return dp[m - 1][n - 1]
+
+    def bbox2polygon(bbox):
+        points = []
+        points.append((bbox[0], bbox[1]))
+        points.append((bbox[0], bbox[1] + bbox[3]))
+        points.append((bbox[0] + bbox[2], bbox[1] + bbox[3]))
+        points.append((bbox[0] + bbox[2], bbox[1]))
+        return points
+
+    def gt_helper(line):
+        line = [char for char in line if char['is_chinese']]
+        if not line:
+            return None
+        points = np.array([p for char in line for p in char['polygon']])
+        hull = ConvexHull(points)
+        polygon = [points[i].tolist() for i in hull.vertices]
+        text = common_tools.reduce_sum(char['text'] for char in line)
+        return Polygon(polygon), text
+
+    eval_type = 'textlines'
+
+    gts = ground_truth.splitlines()
+    dts = detection.splitlines()
+    if len(gts) != len(dts):
+        return error('number of lines not match: {} expected, {} loaded'.format(len(gts), len(dts)))
+
+    sum_ed = 0
+    sum_gt = 0
+    for i, (gt, dt) in enumerate(zip(gts, dts)):
+        if echo and 0 == i % 200:
+            print(i, '/', len(gts))
+
+        try:
+            dt = json.loads(dt)
+        except:
+            return error('line {} is not legal json'.format(i + 1))
+        if not isinstance(dt, dict):
+            return error('line {} is not json object'.format(i + 1))
+        if eval_type not in dt:
+            return error('line {} does not contain key `{}`'.format(i + 1, eval_type))
+        dt = dt[eval_type]
+        if not isinstance(dt, list):
+            return error('line {} {} is not an array'.format(i + 1, eval_type))
+        if len(dt) > max_det:
+            return error('line {} number of {} exceeds limit ({})'.format(i + 1, eval_type, max_det))
+        for j, line in enumerate(dt):
+            if not isinstance(line, dict):
+                return error('line {} {} candidate {} is not an object'.format(i + 1, eval_type, j + 1))
+            if 'text' not in line:
+                return error('line {} {} candidate {} does not contain key `text`'.format(i + 1, eval_type, j + 1))
+            if 'polygon' not in line:
+                return error('line {} {} candidate {} does not contain key `polygon`'.format(i + 1, eval_type, j + 1))
+            if not isinstance(line['text'], six.text_type):
+                return error('line {} {} candidate {} text is not text-type'.format(i + 1, eval_type, j + 1))
+            if not isinstance(line['polygon'], list):
+                return error('line {} {} candidate {} polygon is not an array'.format(i + 1, eval_type, j + 1))
+            if len(line['polygon']) < 3:
+                return error('line {} {} polygon {} contains too less vertices'.format(i + 1, eval_type, j + 1))
+            if max_vertices < len(line['polygon']):
+                return error('line {} {} polygon {} contains too many vertices'.format(i + 1, eval_type, j + 1))
+            for t in line['polygon']:
+                if not isinstance(t, list) or 2 != len(t):
+                    return error('line {} {} polygon {} is ill formatted'.format(i + 1, eval_type, j + 1))
+                for x in t:
+                    if not isinstance(x, (int, float)):
+                        return error('line {} {} polygon {} is ill formatted'.format(i + 1, eval_type, j + 1))
+            polygon = Polygon(line['polygon'])
+            if not polygon.is_valid:
+                return error('line {} {} polygon {} is not valid (e.g., has self-intersection)'.format(i + 1, eval_type, j + 1))
+
+        gtobj = json.loads(gt)
+        dt = [(Polygon(line['polygon']), line['text']) for line in dt]
+        gt = [gt_helper(line) for line in gtobj['annotations']]
+        gt = [o for o in gt if o is not None]
+        ig = [Polygon(bbox2polygon(o['bbox'])) for o in gtobj['ignore']]
+
+        dt_matches = [[] for i in range(len(dt))]
+        dt_ig = [False] * len(dt)
+        for i_dt, dtline in enumerate(dt):
+            for i_gt, gtline in enumerate(gt):
+                miou = iou_polygon(dtline[0], gtline[0])
+                if miou > iou_thresh:
+                    dt_matches[i_dt].append((-miou, i_gt))
+            for igline in ig:
+                miou = a_in_b_polygon(dtline[0], igline)
+                if miou > iou_thresh:
+                    dt_ig[i_dt] = True
+        for matches in dt_matches:
+            matches.sort()
+
+        dt_matched = [0 if False == b else 2 for b in dt_ig]
+        gt_taken = [(0, None) for o in gt]
+        for i_dt, matches in enumerate(dt_matches):
+            for _, i_gt in matches:
+                if 1 != dt_matched[i_dt] and 1 != gt_taken[i_gt][0]:
+                    dt_matched[i_dt] = 1
+                    gt_taken[i_gt] = (1, i_dt)
+        len_gt = 0
+        len_fn = 0    # gt not matched
+        len_tp_ed = 0 # matched edit distance
+        len_fp = 0    # dt not matched
+        len_ig = 0    # dt ignored
+        for i_gt, (gt_status, i_dt) in enumerate(gt_taken):
+            len_gt += len(gt[i_gt][1])
+            if gt_status == 0:
+                len_fn += len(gt[i_gt][1])
+            else:
+                len_tp_ed += edit_distance(gt[i_gt][1], dt[i_dt][1])
+        for i_dt, dt_status in enumerate(dt_matched):
+            if dt_status == 0:
+                len_fp += len(dt[i_dt][1])
+            elif dt_status == 2:
+                len_ig += len(dt[i_dt][1])
+        ed = len_tp_ed + len_fp + len_fn
+        sum_ed += ed
+        sum_gt += len_gt
+    return {
+        'AED': sum_ed / len(gts),
+        'instance_per_image': sum_gt / len(gts),
+    }

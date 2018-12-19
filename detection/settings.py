@@ -9,6 +9,8 @@ PRODUCTS_ROOT          = 'products'
 CATES                  = 'products/cates.json'
 NUM_CHAR_CATES         = 1000
 MAX_DET_PER_IMAGE      = 1000
+TEXTLINE_MAX_DET       = 100
+TEXTLINE_MAX_VERTICES  = 10
 
 DARKNET_ROOT           = 'darknet'
 DARKNET_BACKUP_DIR     = 'products/backup'
