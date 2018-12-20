@@ -19,7 +19,7 @@ def line_merge(detections):
     def match(a, b, row=False):
         abox = a['bbox']
         bbox = b['bbox']
-        if not (.25 < abox[2] * abox[3] / (bbox[2] * bbox[3]) < 4.):
+        if not (.667 < abox[2] * abox[3] / (bbox[2] * bbox[3]) < 1.5):
             return False
         amid = (abox[0] + abox[2] / 2, abox[1] + abox[3] / 2)
         bmid = (bbox[0] + bbox[2] / 2, bbox[1] + bbox[3] / 2)
