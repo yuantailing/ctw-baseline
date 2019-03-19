@@ -139,25 +139,26 @@ def main():
     data = [
         [
             {
-                'legend': 'training set',
+                'legend': 'Training Set',
                 'data': [o['trainval'] for o in meta],
             }, {
-                'legend': 'testing set',
+                'legend': 'Testing Set',
                 'data': [o['test'] for o in meta],
             },
         ],
     ]
     labels = [o['text'] for o in meta]
     with plt.style.context({
-        'figure.subplot.left': .06,
+        'figure.subplot.left': .08,
         'figure.subplot.right': .98,
         'figure.subplot.top': .96,
         'pdf.fonttype': 42,
     }):
-        plt.figure(figsize=(10, 3))
+        plt.figure(figsize=(10, 2.8))
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, xticks_font_fname=get_chinese_ttf())
+        plt.ylabel('Number of Character Instances')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_most_freq.pdf'))
         plt.close()
 
@@ -166,10 +167,10 @@ def main():
     data = [
         [
             {
-                'legend': 'training set',
+                'legend': 'Training Set',
                 'data': [o['trainval'] for o in meta],
             }, {
-                'legend': 'testing set',
+                'legend': 'Testing Set',
                 'data': [o['test'] for o in meta],
             },
         ],
@@ -186,8 +187,8 @@ def main():
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.xlabel('number of character instances')
-        plt.ylabel('number of images')
+        plt.xlabel('Number of Character Instances')
+        plt.ylabel('Number of Images')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_char.pdf'))
         plt.close()
 
@@ -196,10 +197,10 @@ def main():
     data = [
         [
             {
-                'legend': 'training set',
+                'legend': 'Training Set',
                 'data': [o['trainval'] for o in meta],
             }, {
-                'legend': 'testing set',
+                'legend': 'Testing Set',
                 'data': [o['test'] for o in meta],
             },
         ],
@@ -216,8 +217,8 @@ def main():
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
-        plt.xlabel('number of character categories')
-        plt.ylabel('number of images')
+        plt.xlabel('Number of Character Categories')
+        plt.ylabel('Number of Images')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_num_uniq_char.pdf'))
         plt.close()
 
@@ -228,17 +229,17 @@ def main():
     data = [
         [
             {
-                'legend': 'training set',
+                'legend': 'Training Set',
                 'data': [bisect.bisect_left(longsizes['trainval'], hi) - bisect.bisect_left(longsizes['trainval'], lo) for lo, hi in zip(ranges, ranges[1:] + [float('inf')])],
             }, {
-                'legend': 'testing set',
+                'legend': 'Testing Set',
                 'data': [bisect.bisect_left(longsizes['test'], hi) - bisect.bisect_left(longsizes['test'], lo) for lo, hi in zip(ranges, ranges[1:] + [float('inf')])],
             },
         ],
     ]
     labels = ['{}-{}'.format(lo, hi) for lo, hi in zip(ranges, ranges[1:] + [''])]
     with plt.style.context({
-        'figure.subplot.left': .12,
+        'figure.subplot.left': .16,
         'figure.subplot.right': .96,
         'figure.subplot.bottom': .10,
         'figure.subplot.top': .96,
@@ -248,6 +249,7 @@ def main():
         plt.xlim((0, len(labels) + 1))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels)
+        plt.ylabel('Number of Character Instances')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_instance_size.pdf'))
         plt.close()
 
@@ -255,12 +257,12 @@ def main():
     data = [
         [
             {
-                'legend': szname,
+                'legend': szname.title(),
                 'data': [attrs[szname][attr] / attrs[szname]['__all__'] * 100 for attr in settings.ATTRIBUTES],
             }
         ] for szname, szrange in settings.SIZE_RANGES
     ]
-    labels = settings.ATTRIBUTES
+    labels = [attr.title() for attr in settings.ATTRIBUTES]
     with plt.style.context({
         'figure.subplot.left': .12,
         'figure.subplot.right': .96,
@@ -273,6 +275,7 @@ def main():
         plt.grid(which='major', axis='y', linestyle='dotted')
         plt.gca().yaxis.set_major_formatter(plt.FuncFormatter('{:.0f}%'.format))
         plot_tools.draw_bar(data, labels, width=.18)
+        plt.ylabel('Percent of Character Instances')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'stat_attributes.pdf'))
         plt.close()
 

@@ -110,7 +110,7 @@ def draw_by_models(all):
     data = [
         [
             {
-                'legend': szname,
+                'legend': szname.title(),
                 'data': [model_recall(model['performance'][szname]['attributes']) for model in all],
             }
         ] for szname, _ in settings.SIZE_RANGES
@@ -127,7 +127,7 @@ def draw_by_models(all):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('accuracy')
+        plt.ylabel('Accuracy')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_model_size.pdf'))
         plt.close()
 
@@ -145,12 +145,13 @@ def draw_by_attrs(model_name, performance):
     data = [
         [
             {
-                'legend': szname,
+                'legend': szname.title(),
                 'data': [attr_recall(performance[szname]['attributes'], i) for i in range(-1, 2 * len(settings.ATTRIBUTES))],
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
     labels = ['all'] + settings.ATTRIBUTES + list(map('~{}'.format, settings.ATTRIBUTES))
+    labels = [label.title() for label in labels]
     with plt.style.context({
         'figure.subplot.left': .05,
         'figure.subplot.right': .98,
@@ -163,7 +164,7 @@ def draw_by_attrs(model_name, performance):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('accuracy')
+        plt.ylabel('Accuracy')
         plt.savefig(os.path.join(settings.PLOTS_DIR, 'cls_precision_by_attr_size_{}.pdf'.format(model_name)))
         plt.close()
 

@@ -112,12 +112,13 @@ def draw(report):
     data = [
         [
             {
-                'legend': szname,
+                'legend': szname.title(),
                 'data': [attr_recall(report['performance'][szname]['attributes'], i) for i in range(-1, 2 * len(settings.ATTRIBUTES))],
             }
         ] for szname, _ in settings.SIZE_RANGES
     ]
     labels = ['all'] + settings.ATTRIBUTES + list(map('~{}'.format, settings.ATTRIBUTES))
+    labels = [label.title() for label in labels]
     with plt.style.context({
         'figure.subplot.left': .05,
         'figure.subplot.right': .98,
@@ -130,7 +131,7 @@ def draw(report):
         plt.ylim((0., 1.))
         plt.grid(which='major', axis='y', linestyle='dotted')
         plot_tools.draw_bar(data, labels, width=.18, legend_kwargs={'ncol': len(settings.SIZE_RANGES)})
-        plt.ylabel('recall')
+        plt.ylabel('Recall')
         plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_recall_by_attr_size.pdf'))
         plt.close()
 
@@ -149,10 +150,10 @@ def draw(report):
         for szname, stat in sorted(report['performance'].items()):
             y = [1.] + stat['AP_curve'] + [0.] * (stat['n'] - len(stat['AP_curve']))
             x = np.linspace(0, 1, len(y))
-            plt.plot(x, y, label=szname)
+            plt.plot(x, y, label=szname.title())
         plt.legend()
-        plt.xlabel('recall')
-        plt.ylabel('precision')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
         plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_AP_curve.pdf'))
         plt.close()
 
@@ -175,10 +176,10 @@ def draw(report):
                 y = [y[0]] + list(y) + [0.]
             else:
                 x, y = [0., 1.], [0., 0.]
-            plt.plot(x, y, label=szname)
+            plt.plot(x, y, label=szname.title())
         plt.legend()
-        plt.xlabel('recall')
-        plt.ylabel('precision')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
         plt.savefig(os.path.join(settings.PLOTS_DIR, ('pro' if proposal else 'det') + '_mAP_curve.pdf'))
         plt.close()
 
